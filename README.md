@@ -24,7 +24,9 @@ Client Demo: Android (Java)
 
 ## Timeline
 Start: Dec. 28, 2015
+
 Proposal: Jan. 20, 2016
+
 Defense: TBD
 
 ## Special Thanks
