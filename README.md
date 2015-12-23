@@ -7,6 +7,12 @@ Tianyi Geng http://tianyi.world
 ## Advisor
 Prof. Yonglin Xue
 
+## Modules (to be continued)
+
+MDCT: https://en.wikipedia.org/wiki/Modified_discrete_cosine_transform
+
+Huffman Coding: https://en.wikipedia.org/wiki/Huffman_coding
+
 ## Tech Stack
 
 ### Required: 
