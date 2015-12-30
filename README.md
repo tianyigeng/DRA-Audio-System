@@ -1,5 +1,5 @@
 # DRA-Audio-System
-DRA audio encoder &amp; decoder, Mr. Tianyi Geng's undergraduate thesis in Tsinghua Univ., Dept. of EE
+DRA audio encoder &amp; decoder, Mr. Tianyi Geng's undergraduate thesis in Dept. of EE, Tsinghua University.
 
 https://en.wikipedia.org/wiki/Dynamic_Resolution_Adaptation
 
@@ -33,7 +33,9 @@ Client Demo: Android (Java)
 ## Timeline
 Start: Dec. 28, 2015
 
-Proposal: Jan. 20, 2016
+Proposal: Jan. 19, 2016
+
+Mid-Check: Apr. 20, 2016
 
 Defense: TBD
 
