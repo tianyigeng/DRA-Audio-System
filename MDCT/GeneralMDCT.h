@@ -13,6 +13,6 @@ int MDCT(const int M,
 
 int iMDCT(const int M, 
 		  const double* src, 
-		  int* dst);
+		  double* dst);
 
 // #endif
