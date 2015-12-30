@@ -1,5 +1,5 @@
-// #ifndef MAIN_C
-// #define MAIN_C
+#ifndef MAIN_C
+#define MAIN_C
 
 #include "GeneralMDCT.h"
 #include <stdio.h>
@@ -92,4 +92,4 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-// #endif
+#endif

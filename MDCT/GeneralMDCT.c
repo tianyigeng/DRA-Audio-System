@@ -4,8 +4,8 @@
  *  All Rights Reserved
  */
 
-// #ifndef GENERAL_MDCT_C
-// #define GENERAL_MDCT_C
+#ifndef GENERAL_MDCT_C
+#define GENERAL_MDCT_C
 
 static const double M_PI = 3.1415926;
 
@@ -61,4 +61,4 @@ int iMDCT(const int M, const double* X, double* x) {
     return 0;
 }
 
-// #endif
+#endif
