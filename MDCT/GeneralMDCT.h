@@ -1,7 +1,6 @@
 /*
  *  General MDCT Implementation
- *  Copyright (C) 2015 Tianyi Geng
- *  All Rights Reserved
+ *  Copyright (C) 2016 Tianyi Geng
  */
 
 #ifndef GENERAL_MDCT_H
