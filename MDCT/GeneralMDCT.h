@@ -7,11 +7,11 @@
 #define GENERAL_MDCT_H
 
 int MDCT(const int M, 
-		 const int* src, 
-		 double* dst);
+         const int* src, 
+         double* dst);
 
 int iMDCT(const int M, 
-		  const double* src, 
-		  double* dst);
+          const double* src, 
+          double* dst);
 
 #endif
