@@ -20,9 +20,9 @@ void dump_array_double(const int len, const double* data) {
 }
 
 int main(int argc, char** argv) {
-    const int SIZE = 4;
-    int* test_data_stream = malloc(SIZE * 4 * sizeof(int));
-    int* test_data_in;
+    const int SIZE = 1 << 1;
+    double* test_data_stream = malloc(SIZE * 4 * sizeof(double));
+    double* test_data_in;
     double* test_data_out = malloc(SIZE * sizeof(double));
     double* test_data_return = malloc(SIZE * 2 * sizeof(double));
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
     // Original Array
     printf("Original Array: \n");
-    dump_array_int(SIZE * 4, test_data_stream);
+    dump_array_double(SIZE * 4, test_data_stream);
     printf("\n");
 
     // Frame 1
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     MDCT(SIZE, test_data_in, test_data_out);
     printf("Size: %d\n", SIZE);
     printf("Input Array: \n");
-    dump_array_int(SIZE * 2, test_data_in);
+    dump_array_double(SIZE * 2, test_data_in);
     printf("Output Array: \n");
     dump_array_double(SIZE, test_data_out);
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     MDCT(SIZE, test_data_in, test_data_out);
     printf("Size: %d\n", SIZE);
     printf("Input Array: \n");
-    dump_array_int(SIZE * 2, test_data_in);
+    dump_array_double(SIZE * 2, test_data_in);
     printf("Output Array: \n");
     dump_array_double(SIZE, test_data_out);
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     MDCT(SIZE, test_data_in, test_data_out);
     printf("Size: %d\n", SIZE);
     printf("Input Array: \n");
-    dump_array_int(SIZE * 2, test_data_in);
+    dump_array_double(SIZE * 2, test_data_in);
     printf("Output Array: \n");
     dump_array_double(SIZE, test_data_out);
 

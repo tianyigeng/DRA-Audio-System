@@ -6,8 +6,6 @@
 #ifndef GENERAL_MDCT_C
 #define GENERAL_MDCT_C
 
-static const double M_PI = 3.1415926;
-
 #include <math.h>
 #include "GeneralMDCT.h"
 #include <stdio.h>
@@ -19,7 +17,7 @@ static inline double _winFunc(const int M, const int n) {
 }
 
 // M denotes the length of output signal, len(src) should be 2 * M
-int MDCT(const int M, const int* x, double* X) {
+int MDCT(const int M, const double* x, double* X) {
     for (int k = 0; k < M; k++) {
         X[k] = 0.0;
         for (int n = 0; n < 2 * M; n++) {
