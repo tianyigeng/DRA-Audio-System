@@ -1,4 +1,4 @@
-#include "Huffman.h"
+#include "huffbook.h"
 
 static const HUFFBITS Incr1[] = {2, 0, 1, 0, 0, 1, 0};
 static const HUFFBITS Code1[] = {0, 3, 3, 2, 5, 9, 8};
