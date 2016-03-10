@@ -18,18 +18,18 @@ static void _tree_insert(struct TreeNode* root, uint16_t bitcnt, uint16_t code, 
 	uint16_t i;
 	for (i = bitcnt; i > 0; i--) {
 		uint16_t choice = (code >> i) & 0x1;
-		if (choice == 0) {
-			if (!curr->left) {
-				curr->left = (struct TreeNode*) malloc(sizeof(struct TreeNode));
-				_node_init(curr->left);
-			}
-			curr = curr->left;
-		} else {
+		if (choice) {
 			if (!curr->right) {
 				curr->right = (struct TreeNode*) malloc(sizeof(struct TreeNode));
 				_node_init(curr->right);
 			}
 			curr = curr->right;
+		} else {
+			if (!curr->left) {
+				curr->left = (struct TreeNode*) malloc(sizeof(struct TreeNode));
+				_node_init(curr->left);
+			}
+			curr = curr->left;
 		}
 	}
 	curr->is_leaf = 1;
