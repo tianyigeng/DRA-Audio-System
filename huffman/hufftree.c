@@ -18,7 +18,7 @@ static struct TreeNode* _new_node() {
 static void _tree_insert(struct TreeNode* root, uint16_t bitcnt, uint16_t code, uint16_t val) {
     struct TreeNode* curr = root;
     uint16_t i;
-    for (i = bitcnt; i > 0; i--) {
+    for (i = bitcnt - 1; i >= 0; i--) {
         uint16_t choice = (code >> i) & 0x1;
         if (choice) {
             if (!curr->right) {
