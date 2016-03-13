@@ -4,7 +4,7 @@
 #define HUFFBOOKCNT 1
 
 struct HuffCodeBook {
-    unsigned int len;
+    uint16_t len;
     const HUFFBITS* BitIncr;
     const HUFFBITS* Code;
     const HUFFBITS* Index;

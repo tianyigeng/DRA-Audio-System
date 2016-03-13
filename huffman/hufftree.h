@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "huffbook.h"
 
 struct TreeNode {
 	int16_t val;
@@ -6,3 +7,5 @@ struct TreeNode {
 	struct TreeNode* left;
 	struct TreeNode* right;
 };
+
+struct TreeNode* build_tree(struct HuffCodeBook* book);
