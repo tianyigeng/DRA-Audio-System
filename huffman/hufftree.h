@@ -11,7 +11,7 @@ struct TreeNode {
 	struct TreeNode* right;
 };
 
-struct TreeNode* build_tree(struct HuffCodeBook* book); /* build a tree to support encoding/decoding */
+struct TreeNode* build_tree(struct huff_codebook* book); /* build a tree to support encoding/decoding */
 void erase_tree(struct TreeNode* root); 				/* free memory */
 
 #endif

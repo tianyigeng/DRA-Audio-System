@@ -5,7 +5,7 @@ static struct TreeNode* _new_node();
 static void _tree_insert(struct TreeNode* root, uint16_t cnt, 
                             uint16_t code, uint16_t val);
 
-struct TreeNode* build_tree(struct HuffCodeBook* book) {
+struct TreeNode* build_tree(struct huff_codebook* book) {
     struct TreeNode* root = _new_node();
     uint16_t currbits = 0;
     for (uint16_t i = 0; i < book->len; i++) {

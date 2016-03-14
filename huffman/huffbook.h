@@ -3,17 +3,14 @@
 
 #include <stdint.h>
 
-#define HUFFBITS uint16_t
-#define HUFFBOOKCNT 1
-
-struct HuffCodeBook {
+struct huff_codebook {
     uint16_t len;
-    const HUFFBITS* BitIncr;
-    const HUFFBITS* Code;
-    const HUFFBITS* Index;
+    const uint16_t* BitIncr;
+    const uint16_t* Code;
+    const uint16_t* Index;
 };
 
-extern struct HuffCodeBook HuffDec1_7x1;
-extern struct HuffCodeBook HuffDec1_7x2;
+extern struct huff_codebook HuffDec1_7x1;
+extern struct huff_codebook HuffDec1_7x2;
 
 #endif
