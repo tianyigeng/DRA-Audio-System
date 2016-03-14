@@ -1,5 +1,5 @@
-#include <stdint.h>
 #include "huffbook.h"
+#include "hufftree.h"
 #include "../bitstream/bitstream.h"
 #include "../util/vector.h"
 
