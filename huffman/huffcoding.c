@@ -1,5 +1,9 @@
 #include "huffcoding.h"
 
-void huffdec(struct HuffCodeBook* book, struct BitStream* bs, struct vector* result) {
+void huff_decode(struct HuffCodeBook* book, struct BitStream* src, struct vector* result) {
 
+}
+
+void huff_encode(struct HuffCodeBook* book, struct vector* src, struct BitStream* result) {
+    
 }
