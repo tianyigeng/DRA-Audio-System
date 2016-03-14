@@ -51,6 +51,10 @@ void print_vec_int32(struct vector* v) {
 
 void vector_push_back_int32(struct vector* v, int32_t elem) {
     int32_t* e = (int32_t*) malloc(sizeof(int32_t));
+    if (e == NULL) {
+        printf("memory allocation failure, exitting!");
+        exit(0x500);
+    }
     *e = elem;
     _vector_push_back(v, (void*) e);
 }
