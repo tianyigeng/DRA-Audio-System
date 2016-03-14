@@ -11,10 +11,12 @@ struct vector {
     void** buf;
 };
 
-struct vector* vector_init();
-void vector_destroy(struct vector* v);
-void print_vec_int32(struct vector* v);
-void vector_push_back_int32(struct vector* v, int elem);
-void vector_pop_back(struct vector* v);
+struct vector* vector_init();               /* constructor */
+void vector_destroy(struct vector* v);      /* destructor */
+
+void print_vec_int32(struct vector* v);     /* print the vector */
+
+void vector_push_back_int32(struct vector* v, int elem);    /* push_back an integer */
+void vector_pop_back(struct vector* v);                     /* pop_back */
 
 #endif
