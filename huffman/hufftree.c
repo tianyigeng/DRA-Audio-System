@@ -15,6 +15,15 @@ struct TreeNode* build_tree(struct HuffCodeBook* book) {
     return root;
 }
 
+void erase_tree(struct TreeNode* root) {
+    if (root == NULL) {
+        return;
+    }
+    erase_tree(root->left);
+    erase_tree(root->right);
+    free(root);
+}
+
 static struct TreeNode* _new_node() {
     struct TreeNode* n = (struct TreeNode*) malloc(sizeof(struct TreeNode));
     n->val = -1;

@@ -6,3 +6,4 @@ struct BitStream {
 };
 
 void open_bitstream(struct BitStream* bs, uint16_t size);
+struct BitStream* copy_bitstream(struct BitStream* src);
