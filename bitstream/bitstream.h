@@ -1,3 +1,6 @@
+#ifndef __BITSTREAM_H_
+#define __BITSTREAM_H_
+
 #include <stdint.h>
 #include "../util/vector.h"
 #include "../control.h"
@@ -18,3 +21,5 @@ void bitstream_push(
     );
 
 void bitstream_print(struct bit_stream* bs);
+
+#endif

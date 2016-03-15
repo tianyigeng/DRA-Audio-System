@@ -19,3 +19,6 @@ testbs:
 	util/vector.c util/vector.h \
 	bitstream/bitstream.c bitstream/bitstream.h \
 	bitstream/test_bitstream.c
+
+clean:
+	rm *.gch */*.gch

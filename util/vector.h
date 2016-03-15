@@ -21,5 +21,6 @@ void vector_push_back_int32(struct vector* v, int elem);    /* push_back an inte
 void vector_pop_back(struct vector* v);                     /* pop_back */
 
 uint32_t vector_uint32_at(struct vector* v, uint32_t pos);
+int32_t vector_int32_at(struct vector* v, uint32_t pos);
 
 #endif

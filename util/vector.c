@@ -72,6 +72,10 @@ uint32_t vector_uint32_at(struct vector* v, uint32_t pos) {
     return *(uint32_t*)(v->buf[pos]);
 }
 
+int32_t vector_int32_at(struct vector* v, uint32_t pos) {
+    return *(int32_t*)(v->buf[pos]);
+}
+
 static void _vector_push_back(struct vector* v, void* elem) {
     if (v->size == v->cap) {
         _vector_grow(v);
