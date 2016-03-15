@@ -8,9 +8,9 @@ static void _tree_insert(struct TreeNode* root, uint16_t cnt,
 struct TreeNode* build_tree(struct huff_codebook* book) {
     struct TreeNode* root = _new_node();
     uint16_t currbits = 0;
-    for (uint16_t i = 0; i < book->len; i++) {
-        currbits += book->BitIncr[i];
-        _tree_insert(root, currbits, book->Code[i], book->Index[i]);
+    for (uint16_t i = 0; i < book->size; i++) {
+        currbits += book->bit_incr[i];
+        _tree_insert(root, currbits, book->code[i], book->index[i]);
     }
     return root;
 }

@@ -1,5 +1,5 @@
-#ifndef VECTOR_C_
-#define VECTOR_C_
+#ifndef __VECTOR_C_
+#define __VECTOR_C_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,15 +16,13 @@ static void _vector_push_back(struct vector* v, void* elem);
 struct vector* vector_init() {
     struct vector* v = (struct vector*) malloc(sizeof(struct vector));
     if (v == NULL) {
-        printf("memory allocation failure, exitting!");
-        exit(0x500);
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
     }
     v->cap = INIT_CAP;
     v->size = 0;
     v->buf = (void**) malloc(sizeof(void*) * v->cap);
     if (v->buf == NULL) {
-        printf("memory allocation failure, exitting!");
-        exit(0x500);
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
     }
     return v;
 }
@@ -43,6 +41,9 @@ void print_vec_int32(struct vector* v) {
     printf("vector cap: %d\n", v->cap);
     printf("vector content: ");
     for (uint32_t i = 0; i < v->size; i++) {
+        if (i % 16 == 0) {
+            printf("\n");
+        }
         printf("%d ", *((int32_t*)(v->buf[i])));
     }
     printf("\n");
@@ -52,8 +53,7 @@ void print_vec_int32(struct vector* v) {
 void vector_push_back_int32(struct vector* v, int32_t elem) {
     int32_t* e = (int32_t*) malloc(sizeof(int32_t));
     if (e == NULL) {
-        printf("memory allocation failure, exitting!");
-        exit(0x500);
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
     }
     *e = elem;
     _vector_push_back(v, (void*) e);
@@ -68,6 +68,10 @@ void vector_pop_back(struct vector* v) {
     v->size--;
 }
 
+uint32_t vector_uint32_at(struct vector* v, uint32_t pos) {
+    return *(uint32_t*)(v->buf[pos]);
+}
+
 static void _vector_push_back(struct vector* v, void* elem) {
     if (v->size == v->cap) {
         _vector_grow(v);
@@ -79,8 +83,7 @@ static void _vector_push_back(struct vector* v, void* elem) {
 static void _vector_grow(struct vector* v) {
     v->buf = realloc(v->buf, sizeof(void*) * v->cap * SCALE);
     if (v->buf == NULL) {
-        printf("memory allocation failure, exitting!");
-        exit(0x500);
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
     }
     v->cap *= SCALE;
 }

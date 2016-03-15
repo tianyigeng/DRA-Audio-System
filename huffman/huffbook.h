@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 struct huff_codebook {
-    uint16_t len;
-    const uint16_t* BitIncr;
-    const uint16_t* Code;
-    const uint16_t* Index;
+    uint16_t size;
+    const uint16_t* bit_incr;
+    const uint16_t* code;
+    const uint16_t* index;
 };
 
 extern struct huff_codebook HuffDec1_7x1;

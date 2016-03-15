@@ -1,5 +1,6 @@
 dev: 
 	gcc main.c \
+	util/errors.h util/errors.c \
 	huffman/huffbook.c huffman/huffbook.h \
 	bitstream/bitstream.c bitstream/bitstream.h \
 	huffman/huffcoding.c huffman/huffcoding.h \
@@ -7,10 +8,14 @@ dev:
 	util/vector.c util/vector.h
 
 testvec:
-	gcc util/vector.c util/vector.h \
+	gcc control.h \
+	util/errors.h util/errors.c \
+	util/vector.c util/vector.h \
 	util/test_vector.c
 
 testbs:
-	gcc control.h util/vector.c util/vector.h \
+	gcc control.h \
+	util/errors.h util/errors.c \
+	util/vector.c util/vector.h \
 	bitstream/bitstream.c bitstream/bitstream.h \
 	bitstream/test_bitstream.c

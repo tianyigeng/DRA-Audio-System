@@ -4,6 +4,9 @@
 
 struct bit_stream* bitstream_init() {
     struct bit_stream* bs = (struct bit_stream*) malloc(sizeof(struct bit_stream));
+    if (bs == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+    }
     bs->vec = vector_init();
     bs->buffer = 0;
     bs->buf_size = 0;
@@ -14,7 +17,7 @@ void bitstream_print(struct bit_stream* bs) {
     printf("================================\n");
     printf("bitstream size: %d\n", bs->vec->size * 32 + bs->buf_size);
     printf("bitstream content: \n");
-    for (uint32_t i = 0; i < bs->vec->size; i++) {
+    for (int32_t i = 0; i < bs->vec->size; i++) {
         for (int32_t j = 31; j >= 0; j--) {
             printf("%d", (*(uint32_t*)(bs->vec->buf[i]) >> j) & 0x1);
             if (j % 8 == 0) {
@@ -25,7 +28,7 @@ void bitstream_print(struct bit_stream* bs) {
     }
 
 #ifdef DEBUG
-    printf("buffer value: %x\n", bs->buffer);
+    printf("buffer value: 0x%08x\n", bs->buffer);
 #endif
 
     for (int32_t k = 31; k >= 32 - bs->buf_size; k--) {
@@ -45,9 +48,14 @@ void bitstream_destroy(struct bit_stream* bs) {
 
 void bitstream_push(
     struct bit_stream* bs, 
-    uint32_t target,     /* holder of the bits */
-    uint32_t bits        /* how many bits to write */
+    uint16_t target,     /* holder of the bits */
+    uint16_t bits        /* how many bits to write */
     ) {
+
+    /*
+     *  This module to be optimized, we actually don't need to manipulate bit by bit. 
+     */
+
     for (int32_t i = bits - 1; i >= 0; i--) {
         if (bs->buf_size == 32) {
             vector_push_back_int32(bs->vec, bs->buffer);
