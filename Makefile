@@ -22,3 +22,6 @@ testbs:
 
 clean:
 	rm *.gch */*.gch
+
+count:
+	find . -name \*.h -print -o -name \*.c -print | xargs cat | wc -l
