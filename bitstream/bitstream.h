@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "../util/vector.h"
+#include "../control.h"
 
 struct bit_stream {
     struct vector*     vec; /* use a vector of int32 to represent bit-stream */
@@ -16,3 +17,4 @@ void bitstream_push(
     uint32_t bits         /* how many bits to write */
     );
 
+void bitstream_print(struct bit_stream* bs);

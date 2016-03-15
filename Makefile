@@ -9,3 +9,8 @@ dev:
 testvec:
 	gcc util/vector.c util/vector.h \
 	util/test_vector.c
+
+testbs:
+	gcc control.h util/vector.c util/vector.h \
+	bitstream/bitstream.c bitstream/bitstream.h \
+	bitstream/test_bitstream.c

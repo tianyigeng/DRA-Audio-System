@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "bitstream.h"
 
 struct bit_stream* bitstream_init() {
@@ -7,6 +8,34 @@ struct bit_stream* bitstream_init() {
     bs->buffer = 0;
     bs->buf_size = 0;
     return bs;
+}
+
+void bitstream_print(struct bit_stream* bs) {
+    printf("================================\n");
+    printf("bitstream size: %d\n", bs->vec->size * 32 + bs->buf_size);
+    printf("bitstream content: \n");
+    for (uint32_t i = 0; i < bs->vec->size; i++) {
+        for (int32_t j = 31; j >= 0; j--) {
+            printf("%d", (*(uint32_t*)(bs->vec->buf[i]) >> j) & 0x1);
+            if (j % 8 == 0) {
+                printf(" ");
+            }
+        }
+        printf("\n");
+    }
+
+#ifdef DEBUG
+    printf("buffer value: %x\n", bs->buffer);
+#endif
+
+    for (int32_t k = 31; k >= 32 - bs->buf_size; k--) {
+        printf("%d", (bs->buffer >> k) & 0x1);
+        if (k % 8 == 0) {
+            printf(" ");
+        }
+    }
+    printf("\n");
+    printf("================================\n");
 }
 
 void bitstream_destroy(struct bit_stream* bs) {
@@ -19,13 +48,18 @@ void bitstream_push(
     uint32_t target,     /* holder of the bits */
     uint32_t bits        /* how many bits to write */
     ) {
-    for (uint32_t i = bits - 1; i != 0; i--) {
+    for (int32_t i = bits - 1; i >= 0; i--) {
         if (bs->buf_size == 32) {
             vector_push_back_int32(bs->vec, bs->buffer);
             bs->buffer = 0;
             bs->buf_size = 0;
         }
-        bs->buffer |= ((bits >> i) & 0x1) << (31 - bs->buf_size);
+        bs->buffer |= ((target >> i) & 0x1) << (31 - bs->buf_size);
+
+#ifdef DEBUG
+        printf("i: %d, tosft: %d, buffer size: %d, buffer value: %x\n", i, (target >> i) & 0x1, bs->buf_size, bs->buffer);
+#endif
+
         bs->buf_size++;
     }
 }
