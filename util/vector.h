@@ -18,7 +18,8 @@ void vector_destroy(struct vector* v);      /* destructor */
 void vector_print_int32(struct vector* v);     /* print the vector */
 
 void vector_push_back_int32(struct vector* v, int32_t elem);    /* push_back an integer */
-void vector_push_back_uint32(struct vector* v, uint32_t elem);
+void vector_push_back_uint32(struct vector* v, uint32_t elem);  /* push_back an unsigned integer */
+
 void vector_pop_back(struct vector* v);                     /* pop_back */
 
 uint32_t vector_uint32_at(struct vector* v, uint32_t pos);

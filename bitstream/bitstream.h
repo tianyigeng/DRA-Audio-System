@@ -11,8 +11,8 @@ struct bit_stream {
     uint8_t            buf_size;   /* buffer size (how many bits are taken from last element) */
 };
 
-struct bit_stream* bitstream_init();
-void bitstream_destroy(struct bit_stream* bs);
+struct bit_stream* bitstream_init();            /* constructor */
+void bitstream_destroy(struct bit_stream* bs);  /* destructor */
 
 void bitstream_push(
     struct bit_stream* bs, 
@@ -24,6 +24,6 @@ void bitstream_print(struct bit_stream* bs);
 
 uint32_t bitstream_size(struct bit_stream* bs);
 
-uint8_t bitstream_bit_at(struct bit_stream* bs, uint32_t pos);
+uint8_t bitstream_bit_at(struct bit_stream* bs, uint32_t pos); /* the bit(0/1) at the specified position */
 
 #endif

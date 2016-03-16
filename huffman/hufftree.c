@@ -1,6 +1,12 @@
 #include <stdlib.h>
 #include "hufftree.h"
 
+/*
+ *  A trie-like structure to support decoding huffman bitstream. 
+ *  0 represents the left subtree;
+ *  1 represents the right subtree.
+ */
+
 static struct TreeNode* _new_node();
 static void _tree_insert(struct TreeNode* root, uint16_t cnt, 
                             uint16_t code, uint16_t val);
