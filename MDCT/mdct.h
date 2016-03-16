@@ -3,8 +3,8 @@
  *  Copyright (C) 2016 Tianyi Geng
  */
 
-#ifndef GENERAL_MDCT_H
-#define GENERAL_MDCT_H
+#ifndef __MDCT_H_
+#define __MDCT_H_
 
 int MDCT(const int M, 
          const double* src, 

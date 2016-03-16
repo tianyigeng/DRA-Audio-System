@@ -3,13 +3,11 @@
  *  Copyright (C) 2016 Tianyi Geng
  */
 
-#ifndef GENERAL_MDCT_C
-#define GENERAL_MDCT_C
+#ifndef __MDCT_C_
+#define __MDCT_C_
 
 #include <math.h>
-#include "GeneralMDCT.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "mdct.h"
 
 // Window function
 static inline double _winFunc(const int M, const int n) {

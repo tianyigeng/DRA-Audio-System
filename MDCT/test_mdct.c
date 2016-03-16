@@ -1,9 +1,6 @@
-#ifndef MAIN_C
-#define MAIN_C
-
-#include "GeneralMDCT.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mdct.h"
 
 void dump_array_int(const int len, const int* data) {
     for (int i = 0; i < len; i++) {
@@ -91,5 +88,3 @@ int main(int argc, char** argv) {
     free(test_data_return);
     return 0;
 }
-
-#endif

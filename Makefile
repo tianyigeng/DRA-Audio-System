@@ -13,6 +13,11 @@ testvec:
 	util/vector.c util/vector.h \
 	util/test_vector.c
 
+testmdct:
+	gcc control.h \
+	mdct/mdct.c mdct/mdct.h \
+	mdct/test_mdct.c
+
 testbs:
 	gcc control.h \
 	util/errors.h util/errors.c \
