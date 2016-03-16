@@ -35,7 +35,7 @@ void vector_destroy(struct vector* v) {
     free(v);
 }
 
-void print_vec_int32(struct vector* v) {
+void vector_print_int32(struct vector* v) {
     printf("================================\n");
     printf("vector size: %d\n", v->size);
     printf("vector cap: %d\n", v->cap);
