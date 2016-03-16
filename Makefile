@@ -31,7 +31,7 @@ testhuff:
 	huffman/test_huff.c
 
 clean:
-	rm *.gch */*.gch
+	-@rm *.gch */*.gch *.out */*.out 2> /dev/null || true
 
 count:
-	find . -name \*.h -print -o -name \*.c -print | xargs cat | wc -l
+	-@find . -name \*.h -print -o -name \*.c -print | xargs cat | wc -l

@@ -6,7 +6,9 @@ void huff_decode(struct huff_codebook* book,
                     struct bit_stream* src, 
                     struct vector* result) {
     struct TreeNode* root = build_tree(book);
-    // TODO
+    
+    
+    
     erase_tree(root);
 }
 
