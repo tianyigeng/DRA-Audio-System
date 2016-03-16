@@ -9,5 +9,11 @@ int main() {
     bitstream_push(bs, 122, 11);
     bitstream_push(bs, 1023, 19);
     bitstream_print(bs);
+    // for (uint32_t i = 0; i < bitstream_size(bs); i++) {
+    //     if (i % 8 == 0) {
+    //         printf(" ");
+    //     }
+    //     printf("%d", bitstream_bit_at(bs, i));
+    // }
     bitstream_destroy(bs);
 }

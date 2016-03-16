@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "bitstream.h"
 
+static inline uint8_t _uint32_bit_at(uint32_t num, uint8_t i);
+
 struct bit_stream* bitstream_init() {
     struct bit_stream* bs = (struct bit_stream*) malloc(sizeof(struct bit_stream));
     if (bs == NULL) {
@@ -15,7 +17,7 @@ struct bit_stream* bitstream_init() {
 
 void bitstream_print(struct bit_stream* bs) {
     printf("================================\n");
-    printf("bitstream size: %d\n", bs->vec->size * 32 + bs->buf_size);
+    printf("bitstream size: %d\n", bitstream_size(bs));
     printf("bitstream content: \n");
     for (int32_t i = 0; i < bs->vec->size; i++) {
         for (int32_t j = 31; j >= 0; j--) {
@@ -57,11 +59,6 @@ void bitstream_push(
      */
 
     for (int32_t i = bits - 1; i >= 0; i--) {
-        if (bs->buf_size == 32) {
-            vector_push_back_int32(bs->vec, bs->buffer);
-            bs->buffer = 0;
-            bs->buf_size = 0;
-        }
         bs->buffer |= ((target >> i) & 0x1) << (31 - bs->buf_size);
 
 #ifdef DEBUG
@@ -69,5 +66,40 @@ void bitstream_push(
 #endif
 
         bs->buf_size++;
+        if (bs->buf_size == 32) {
+            vector_push_back_int32(bs->vec, bs->buffer);
+            bs->buffer = 0;
+            bs->buf_size = 0;
+        }
     }
+}
+
+uint32_t bitstream_size(struct bit_stream* bs) {
+    return bs->vec->size * 32 + bs->buf_size;
+}
+
+/*
+ *  Find out the i-th bit in the bitstream
+ */
+uint8_t bitstream_bit_at(struct bit_stream* bs, uint32_t i) {
+    if (i >= bitstream_size(bs)) {
+        handle_error(ERROR_INDEX_OUT_OF_BOUND);
+    }
+
+    uint32_t cnt = i / 32;
+    uint32_t rem = i % 32;
+    if (cnt < bs->vec->size) {
+        return _uint32_bit_at(vector_uint32_at(bs->vec, cnt), rem);
+    }
+    return _uint32_bit_at(bs->buffer, rem);
+}
+
+/*
+ *  Find out the i-th bit in the 32-bit form of num
+ */
+static inline uint8_t _uint32_bit_at(uint32_t num, uint8_t i) {
+    if (i >= 32) {
+        handle_error(ERROR_INDEX_OUT_OF_BOUND);
+    }
+    return (num >> (31 - i)) & 0x1;
 }

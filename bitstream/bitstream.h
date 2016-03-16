@@ -22,4 +22,8 @@ void bitstream_push(
 
 void bitstream_print(struct bit_stream* bs);
 
+uint32_t bitstream_size(struct bit_stream* bs);
+
+uint8_t bitstream_bit_at(struct bit_stream* bs, uint32_t pos);
+
 #endif

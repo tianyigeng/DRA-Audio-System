@@ -5,14 +5,20 @@
 #include <stdio.h>
 #include "errors.h"
 
-const uint32_t ERROR_FAILURE_ALLOC_MEM = 0x500;
-const uint32_t ERROR_UNKNOWN           = 0x999;
+const ERROR_CODE ERROR_FAILURE_ALLOC_MEM  = 0x500;
+const ERROR_CODE ERROR_INDEX_OUT_OF_BOUND = 0x501;
+const ERROR_CODE ERROR_UNKNOWN            = 0x999;
 
-void handle_error(uint32_t code) {
+void handle_error(ERROR_CODE code) {
     switch (code) {
         case ERROR_FAILURE_ALLOC_MEM:
             printf("memory allocation failure, exitting!");
             exit(ERROR_FAILURE_ALLOC_MEM);
+            break;
+
+        case ERROR_INDEX_OUT_OF_BOUND:
+            printf("index out of bound failure, exitting!");
+            exit(ERROR_INDEX_OUT_OF_BOUND);
             break;
 
         default:
