@@ -7,6 +7,9 @@ dev:
 	huffman/hufftree.c huffman/hufftree.h \
 	util/vector.c util/vector.h
 
+config:
+	python configure/config.py
+
 testvec:
 	gcc control.h \
 	util/errors.h util/errors.c \
