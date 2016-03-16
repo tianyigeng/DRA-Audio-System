@@ -1,3 +1,6 @@
+#ifndef __HUFFCODING_C_
+#define __HUFFCODING_C_
+
 #include <stdint.h>
 #include <stdlib.h>
 #include "huffcoding.h"
@@ -6,9 +9,21 @@ void huff_decode(struct huff_codebook* book,
                     struct bit_stream* src, 
                     struct vector* result) {
     struct TreeNode* root = build_tree(book);
-    
-    
-    
+
+    struct TreeNode* curr = root;
+    uint32_t len = bitstream_size(src);
+    for (uint32_t i = 0; i < len; i++) {
+        if (bitstream_bit_at(src, i)) {
+            curr = curr->right;
+        } else {
+            curr = curr->left;
+        }
+        if (curr->is_leaf) {
+            vector_push_back_uint32(result, curr->val);
+            curr = root;
+        }
+    }
+
     erase_tree(root);
 }
 
@@ -39,3 +54,5 @@ void huff_encode(struct huff_codebook* book,
     free(temp_code);
     free(temp_bits);
 }
+
+#endif

@@ -59,6 +59,15 @@ void vector_push_back_int32(struct vector* v, int32_t elem) {
     _vector_push_back(v, (void*) e);
 }
 
+void vector_push_back_uint32(struct vector* v, uint32_t elem) {
+    uint32_t* e = (uint32_t*) malloc(sizeof(uint32_t));
+    if (e == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+    }
+    *e = elem;
+    _vector_push_back(v, (void*) e);
+}
+
 void vector_pop_back(struct vector* v) {
     if (v->size == 0) {
         printf("Error vector_pop_back, vector is empty");

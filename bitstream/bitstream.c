@@ -1,3 +1,6 @@
+#ifndef __BITSTREAM_C_
+#define __BITSTREAM_C_
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "bitstream.h"
@@ -103,3 +106,5 @@ static inline uint8_t _uint32_bit_at(uint32_t num, uint8_t i) {
     }
     return (num >> (31 - i)) & 0x1;
 }
+
+#endif

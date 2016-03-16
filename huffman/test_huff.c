@@ -7,6 +7,7 @@
 
 int main() {
     struct vector* v = vector_init();
+    struct vector* result = vector_init();
     struct bit_stream* bs = bitstream_init();
 
     vector_push_back_int32(v, 4);
@@ -23,6 +24,10 @@ int main() {
     huff_encode(&HuffDec1_7x1, v, bs);
     bitstream_print(bs);
     
+    huff_decode(&HuffDec1_7x1, bs, result);
+    vector_print_int32(result);
+
     vector_destroy(v);
+    vector_destroy(result);
     bitstream_destroy(bs);
 }
