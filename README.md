@@ -17,18 +17,7 @@ Huffman Coding: https://en.wikipedia.org/wiki/Huffman_coding
 
 ## Tech Stack
 
-### Required: 
 Main Language: C
-
-Config: toml https://github.com/toml-lang/toml
-
-### Optional:
-
-Probably I may build a web application as a demonstration for this project. 
-
-Web server: Golang, Gin https://github.com/gin-gonic/gin
-
-Client Demo: Android (Java)
 
 ## Timeline
 Start: Dec. 28, 2015
