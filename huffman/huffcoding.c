@@ -18,6 +18,14 @@ void huff_decode(struct huff_codebook* book,
 
     const uint32_t len = bitstream_size(src);
     const uint16_t max_book_indx = book->size - 1;
+
+    /*
+     * note that we may encounter large indices, e.g.
+     * we have a huffbook for range 0~7, now, we need to encode 15 with this book, 
+     * the solution is simple -- just to divide 15 into [7, 7, 1]
+     * and make the encoder & decoder capable of this.
+     * All will be done. 
+     */
     uint32_t cum_val = 0;
 
     for (uint32_t i = 0; i < len; i++) {
