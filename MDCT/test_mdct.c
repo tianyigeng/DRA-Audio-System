@@ -17,7 +17,7 @@ void dump_array_double(const int len, const double* data) {
 }
 
 int main(int argc, char** argv) {
-    const int SIZE = 1 << 1;
+    const int SIZE = 16;
     double* test_data_stream = malloc(SIZE * 4 * sizeof(double));
     double* test_data_in;
     double* test_data_out = malloc(SIZE * sizeof(double));

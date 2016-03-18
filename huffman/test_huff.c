@@ -12,9 +12,9 @@ int main() {
 
     vector_push_back_int32(v, 4);
     vector_push_back_int32(v, 5);
-    vector_push_back_int32(v, 6);
-    vector_push_back_int32(v, 3);
-    vector_push_back_int32(v, 3);
+    vector_push_back_int32(v, 16);
+    vector_push_back_int32(v, 12);
+    vector_push_back_int32(v, 13);
     vector_push_back_int32(v, 2);
     vector_push_back_int32(v, 1);
     vector_push_back_int32(v, 1);

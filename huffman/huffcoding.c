@@ -15,7 +15,10 @@ void huff_decode(struct huff_codebook* book,
     struct TreeNode* root = build_tree(book);
 
     struct TreeNode* curr = root;
-    uint32_t len = bitstream_size(src);
+
+    const uint32_t len = bitstream_size(src);
+    const uint16_t max_book_indx = book->size - 1;
+    uint32_t cum_val = 0;
 
     for (uint32_t i = 0; i < len; i++) {
         if (bitstream_bit_at(src, i)) {
@@ -25,7 +28,11 @@ void huff_decode(struct huff_codebook* book,
         }
 
         if (curr->is_leaf) {
-            vector_push_back_uint32(result, curr->val);
+            cum_val += curr->val;
+            if (curr->val != max_book_indx) {
+                vector_push_back_uint32(result, cum_val);
+                cum_val = 0;
+            }
             curr = root;
         }
     }
@@ -47,6 +54,8 @@ void huff_encode(struct huff_codebook* book,
         handle_error(ERROR_FAILURE_ALLOC_MEM);
     }
 
+    const uint16_t max_book_indx = book->size - 1;
+
     /* set up library here */
     for (uint16_t i = 0; i < book->size; i++) {
         cumulate_size += book->bit_incr[i];
@@ -56,7 +65,16 @@ void huff_encode(struct huff_codebook* book,
 
     /* query from the library, and push to bitstream */
     for (uint32_t i = 0; i < src->size; i++) {
+
         uint32_t indx = vector_uint32_at(src, i);
+
+        /* handle overflow */
+        while (indx >= max_book_indx) {
+            indx = indx - max_book_indx;
+            bitstream_push(result, temp_code[max_book_indx], temp_bits[max_book_indx]);
+        }
+
+        /* process the remainder */
         bitstream_push(result, temp_code[indx], temp_bits[indx]);
     }
 
