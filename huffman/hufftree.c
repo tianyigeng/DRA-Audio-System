@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "hufftree.h"
+#include "../util/errors.h"
 
 /*
  *  A trie-like structure to support decoding huffman bitstream. 
@@ -32,6 +33,10 @@ void erase_tree(struct TreeNode* root) {
 
 static struct TreeNode* _new_node() {
     struct TreeNode* n = (struct TreeNode*) malloc(sizeof(struct TreeNode));
+    if (n == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+    }
+
     n->val = -1;
     n->is_leaf = 0;
     n->left = NULL;
