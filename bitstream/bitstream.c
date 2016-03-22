@@ -11,7 +11,9 @@ struct bit_stream* bitstream_init() {
     struct bit_stream* bs = (struct bit_stream*) malloc(sizeof(struct bit_stream));
     if (bs == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return NULL;
     }
+
     bs->vec = vector_init();
     bs->buffer = 0;
     bs->buf_size = 0;
