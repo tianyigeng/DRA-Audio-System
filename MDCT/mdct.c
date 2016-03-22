@@ -16,11 +16,20 @@ static inline double _winFunc(const int M, const int n);
 static void _MDCT(const int M, const double* x, double* X);
 static void _iMDCT(const int M, const double* X, double* x);
 
-
+/* 
+ *   in  -- vector of double
+ *   out -- vector of double
+ *   out is MDCT of in
+ */
 void MDCT(struct vector* in, struct vector* out) {
 
 }
 
+/* 
+ *   in  -- vector of double
+ *   out -- vector of double
+ *   out is inverse MDCT of in
+ */
 void iMDCT(struct vector* in, struct vector* out) {
     
 }

@@ -7,6 +7,7 @@
 
 extern const ERROR_CODE ERROR_FAILURE_ALLOC_MEM;
 extern const ERROR_CODE ERROR_INDEX_OUT_OF_BOUND;
+extern const ERROR_CODE ERROR_CONTAINER_EMPTY;
 extern const ERROR_CODE ERROR_UNKNOWN;
 
 void handle_error(ERROR_CODE code);

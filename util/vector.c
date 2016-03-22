@@ -17,7 +17,9 @@ struct vector* vector_init() {
     struct vector* v = (struct vector*) malloc(sizeof(struct vector));
     if (v == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return NULL;
     }
+
     v->cap = INIT_CAP;
     v->size = 0;
     v->buf = (void**) malloc(sizeof(void*) * v->cap);
@@ -69,7 +71,9 @@ void vector_push_back_int32(struct vector* v, int32_t elem) {
     int32_t* e = (int32_t*) malloc(sizeof(int32_t));
     if (e == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return;
     }
+
     *e = elem;
     _vector_push_back(v, (void*) e);
 }
@@ -78,7 +82,9 @@ void vector_push_back_uint32(struct vector* v, uint32_t elem) {
     uint32_t* e = (uint32_t*) malloc(sizeof(uint32_t));
     if (e == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return;
     }
+
     *e = elem;
     _vector_push_back(v, (void*) e);
 }
@@ -87,29 +93,47 @@ void vector_push_back_double(struct vector* v, double elem) {
     double* e = (double*) malloc(sizeof(double));
     if (e == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return;
     }
     *e = elem;
+
     _vector_push_back(v, (void*) e);
 }
 
 void vector_pop_back(struct vector* v) {
     if (v->size == 0) {
-        printf("Error vector_pop_back, vector is empty");
+        handle_error(ERROR_CONTAINER_EMPTY);
         return;
     }
+
     free(v->buf[v->size - 1]);
     v->size--;
 }
 
 uint32_t vector_uint32_at(struct vector* v, uint32_t pos) {
+    if (pos >= v->size) {
+        handle_error(ERROR_INDEX_OUT_OF_BOUND);
+        return 0;
+    }
+
     return *(uint32_t*)(v->buf[pos]);
 }
 
 int32_t vector_int32_at(struct vector* v, uint32_t pos) {
+    if (pos >= v->size) {
+        handle_error(ERROR_INDEX_OUT_OF_BOUND);
+        return 0;
+    }
+
     return *(int32_t*)(v->buf[pos]);
 }
 
 double vector_double_at(struct vector* v, uint32_t pos) {
+    if (pos >= v->size) {
+        handle_error(ERROR_INDEX_OUT_OF_BOUND);
+        return 0.0f;
+    }
+
     return *(double*)(v->buf[pos]);
 }
 
@@ -125,7 +149,9 @@ static void _vector_grow(struct vector* v) {
     v->buf = realloc(v->buf, sizeof(void*) * v->cap * SCALE);
     if (v->buf == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return;
     }
+    
     v->cap *= SCALE;
 }
 

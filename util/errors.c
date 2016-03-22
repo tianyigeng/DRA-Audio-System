@@ -7,6 +7,7 @@
 
 const ERROR_CODE ERROR_FAILURE_ALLOC_MEM  = 0x500;
 const ERROR_CODE ERROR_INDEX_OUT_OF_BOUND = 0x501;
+const ERROR_CODE ERROR_CONTAINER_EMPTY    = 0x502;
 const ERROR_CODE ERROR_UNKNOWN            = 0x999;
 
 void handle_error(ERROR_CODE code) {
@@ -19,6 +20,10 @@ void handle_error(ERROR_CODE code) {
         case ERROR_INDEX_OUT_OF_BOUND:
             printf("index out of bound failure, exitting!");
             exit(ERROR_INDEX_OUT_OF_BOUND);
+            break;
+
+        case ERROR_CONTAINER_EMPTY:
+            printf("Error vector_pop_back, vector is empty");
             break;
 
         default:
