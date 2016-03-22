@@ -1,3 +1,7 @@
+/*
+ *  Copyright (C) 2016 Tianyi Geng
+ */
+
 #ifndef __HUFFCODING_C_
 #define __HUFFCODING_C_
 

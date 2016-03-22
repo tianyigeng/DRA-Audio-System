@@ -1,3 +1,7 @@
+/*
+ *  Copyright (C) 2016 Tianyi Geng
+ */
+ 
 #ifndef __BITSTREAM_H_
 #define __BITSTREAM_H_
 

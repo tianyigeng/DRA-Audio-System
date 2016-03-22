@@ -50,6 +50,21 @@ void vector_print_int32(struct vector* v) {
     printf("================================\n");
 }
 
+void vector_print_double(struct vector* v) {
+    printf("================================\n");
+    printf("vector size: %d\n", v->size);
+    printf("vector cap: %d\n", v->cap);
+    printf("vector content: ");
+    for (uint32_t i = 0; i < v->size; i++) {
+        if (i % 16 == 0) {
+            printf("\n");
+        }
+        printf("%.2f ", *((double*)(v->buf[i])));
+    }
+    printf("\n");
+    printf("================================\n");
+}
+
 void vector_push_back_int32(struct vector* v, int32_t elem) {
     int32_t* e = (int32_t*) malloc(sizeof(int32_t));
     if (e == NULL) {
@@ -61,6 +76,15 @@ void vector_push_back_int32(struct vector* v, int32_t elem) {
 
 void vector_push_back_uint32(struct vector* v, uint32_t elem) {
     uint32_t* e = (uint32_t*) malloc(sizeof(uint32_t));
+    if (e == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+    }
+    *e = elem;
+    _vector_push_back(v, (void*) e);
+}
+
+void vector_push_back_double(struct vector* v, double elem) {
+    double* e = (double*) malloc(sizeof(double));
     if (e == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
     }
@@ -83,6 +107,10 @@ uint32_t vector_uint32_at(struct vector* v, uint32_t pos) {
 
 int32_t vector_int32_at(struct vector* v, uint32_t pos) {
     return *(int32_t*)(v->buf[pos]);
+}
+
+double vector_double_at(struct vector* v, uint32_t pos) {
+    return *(double*)(v->buf[pos]);
 }
 
 static void _vector_push_back(struct vector* v, void* elem) {

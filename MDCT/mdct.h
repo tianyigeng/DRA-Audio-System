@@ -6,12 +6,12 @@
 #ifndef __MDCT_H_
 #define __MDCT_H_
 
-int MDCT(const int M, 
-         const double* src, 
-         double* dst);
+#include "../util/vector.h"
 
-int iMDCT(const int M, 
-          const double* src, 
-          double* dst);
+void MDCT(struct vector* in, 
+            struct vector* out);
+
+void iMDCT(struct vector* in, 
+            struct vector* out);
 
 #endif
