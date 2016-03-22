@@ -5,6 +5,7 @@ dev:
 	bitstream/bitstream.c bitstream/bitstream.h \
 	huffman/huffcoding.c huffman/huffcoding.h \
 	huffman/hufftree.c huffman/hufftree.h \
+	mdct/mdct.c mdct/mdct.h \
 	util/vector.c util/vector.h
 
 config:

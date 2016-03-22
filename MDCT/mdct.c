@@ -18,7 +18,7 @@ static void _iMDCT(const int M, const double* X, double* x);
 
 
 void MDCT(struct vector* in, struct vector* out) {
-    
+
 }
 
 void iMDCT(struct vector* in, struct vector* out) {
@@ -41,8 +41,6 @@ static void _MDCT(const int M, const double* x, double* X) {
         }
         X[k] *= sqrt(2.0 / M);
     }
-
-    return 0;
 }
 
 static void _iMDCT(const int M, const double* X, double* x) {
@@ -53,8 +51,6 @@ static void _iMDCT(const int M, const double* X, double* x) {
         }
         x[n] *= _winFunc(M, n) * sqrt(2.0 / M);
     }
-
-    return 0;
 }
 
 #endif
