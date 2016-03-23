@@ -7,6 +7,7 @@
 extern const double STEP[];
 
 struct vector* unit_step(struct vector* in);
+struct vector* inv_unit_step(struct vector* in);
 
 void print_steps();
 

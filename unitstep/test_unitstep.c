@@ -16,7 +16,11 @@ int main() {
 
     vector_print_int32(out);
 
+    struct vector* recv = inv_unit_step(out);
+    vector_print_double(recv);
+
     vector_destroy(v);
     vector_destroy(out);
+    vector_destroy(recv);
     return 0;
 }
