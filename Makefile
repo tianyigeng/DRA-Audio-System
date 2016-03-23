@@ -29,6 +29,13 @@ testbs:
 	bitstream/bitstream.c bitstream/bitstream.h \
 	bitstream/test_bitstream.c
 
+testus:
+	gcc control.h \
+	util/errors.h util/errors.c \
+	util/vector.c util/vector.h \
+	unitstep/unitstep.h unitstep/unitstep.c \
+	unitstep/test_unitstep.c
+
 testhuff:
 	gcc control.h \
 	util/errors.h util/errors.c \

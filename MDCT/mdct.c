@@ -22,7 +22,7 @@ static void _iMDCT(const int M, const double* X, double* x);
  *   out is MDCT of in
  */
 void MDCT(struct vector* in, struct vector* out) {
-    
+    //TODO
 }
 
 /* 
@@ -31,7 +31,7 @@ void MDCT(struct vector* in, struct vector* out) {
  *   out is inverse MDCT of in
  */
 void iMDCT(struct vector* in, struct vector* out) {
-    
+    //TODO
 }
 
 /* Window function */
