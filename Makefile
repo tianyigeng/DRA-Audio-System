@@ -51,4 +51,4 @@ clean:
 	-@rm *.gch */*.gch *.out */*.out 2> /dev/null || true
 
 count:
-	-@find . -name \*.h -print -o -name \*.c -print | xargs cat | wc -l
+	-@find . -name \*.h -print -o -name Makefile -print -o -name \*.c -print | xargs cat | wc -l
