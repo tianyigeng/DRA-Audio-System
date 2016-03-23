@@ -15,6 +15,8 @@ MDCT: https://en.wikipedia.org/wiki/Modified_discrete_cosine_transform
 
 Huffman Coding: https://en.wikipedia.org/wiki/Huffman_coding
 
+Bitstream
+
 ## Tech Stack
 
 Main Language: C
