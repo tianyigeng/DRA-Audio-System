@@ -1,11 +1,12 @@
 dev: 
-	gcc main.c \
+	gcc main.c control.h \
 	util/errors.h util/errors.c \
 	huffman/huffbook.c huffman/huffbook.h \
-	bitstream/bitstream.c bitstream/bitstream.h \
 	huffman/huffcoding.c huffman/huffcoding.h \
 	huffman/hufftree.c huffman/hufftree.h \
+	unitstep/unitstep.h unitstep/unitstep.c \
 	mdct/mdct.c mdct/mdct.h \
+	bitstream/bitstream.c bitstream/bitstream.h \
 	util/vector.c util/vector.h
 
 config:
