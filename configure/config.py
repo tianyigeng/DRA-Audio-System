@@ -1,10 +1,10 @@
 def main():
     header = """
-    /*
-     *   huffbook.c
-     *   This is an auto-generated file, DONOT edit. 
-     */
-    #include "huffbook.h"
+/*
+ *   huffbook.c
+ *   This is an auto-generated file, DONOT edit. 
+ */
+#include "huffbook.h"
     """
     print header
     # dotc = open("huffman/huffbook.c", "w")

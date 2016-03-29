@@ -18,6 +18,10 @@ struct bit_stream {
 struct bit_stream* bitstream_init();            /* constructor */
 void bitstream_destroy(struct bit_stream* bs);  /* destructor */
 
+/* push a string of '0' and '1' to the bitstream */
+void bitstream_push_str(struct bit_stream* bs, 
+                        const char* str);
+
 void bitstream_push(
     struct bit_stream* bs, 
     uint16_t target,      /* holder of the bits */

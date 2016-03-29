@@ -15,5 +15,8 @@ int main() {
     //     }
     //     printf("%d", bitstream_bit_at(bs, i));
     // }
+    bitstream_push_str(bs, "10111011");
+    bitstream_print(bs);
+    
     bitstream_destroy(bs);
 }

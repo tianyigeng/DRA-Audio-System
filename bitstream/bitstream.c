@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "bitstream.h"
 
 static inline uint8_t _uint32_bit_at(uint32_t num, uint8_t i);
@@ -51,6 +52,18 @@ void bitstream_print(struct bit_stream* bs) {
 void bitstream_destroy(struct bit_stream* bs) {
     vector_destroy(bs->vec);
     free(bs);
+}
+
+void bitstream_push_str(struct bit_stream* bs, 
+                        const char* str) {
+    uint16_t len = strlen(str);
+    for (uint16_t i = 0; i < len; i++) {
+        if (str[i] != '0' && str[i] != '1') {
+            handle_error(ERROR_INVALID_ARGV);
+        }
+
+        bitstream_push(bs, str[i] - '0', 1);
+    }
 }
 
 void bitstream_push(
