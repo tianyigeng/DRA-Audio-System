@@ -4,7 +4,7 @@ dev:
 	huffman/huffbook.c huffman/huffbook.h \
 	huffman/huffcoding.c huffman/huffcoding.h \
 	huffman/hufftree.c huffman/hufftree.h \
-	unitstep/unitstep.h unitstep/unitstep.c \
+	unitstep/unitstep.h unitstep/unitstep.c unitstep/steps.c \
 	mdct/mdct.c mdct/mdct.h \
 	bitstream/bitstream.c bitstream/bitstream.h \
 	util/vector.c util/vector.h
