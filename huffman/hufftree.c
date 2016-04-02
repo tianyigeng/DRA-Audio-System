@@ -35,6 +35,7 @@ static struct TreeNode* _new_node() {
     struct TreeNode* n = (struct TreeNode*) malloc(sizeof(struct TreeNode));
     if (n == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return NULL;
     }
 
     n->val = -1;
