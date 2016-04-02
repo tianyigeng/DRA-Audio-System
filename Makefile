@@ -34,7 +34,7 @@ testus:
 	gcc control.h \
 	util/errors.h util/errors.c \
 	util/vector.c util/vector.h \
-	unitstep/unitstep.h unitstep/unitstep.c \
+	unitstep/unitstep.h unitstep/unitstep.c unitstep/steps.c \
 	unitstep/test_unitstep.c
 
 testhuff:
