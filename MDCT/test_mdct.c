@@ -15,5 +15,8 @@ int main(int argc, char** argv) {
     struct vector* out = MDCT(test_data);
     vector_print_double(out);
 
+    struct vector* recv = iMDCT(out);
+    vector_print_double(recv);
+
     return 0;
 }

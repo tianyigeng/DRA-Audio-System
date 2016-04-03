@@ -56,8 +56,30 @@ struct vector* MDCT(struct vector* in) {
  *   ret value is inverse MDCT of in
  */
 struct vector* iMDCT(struct vector* in) {
-    //TODO
-    return NULL;
+    uint16_t len = in->size;
+
+    double* src = (double*) malloc(sizeof(double) * len);
+    double* dst = (double*) malloc(sizeof(double) * len * 2);
+    if (src == NULL || dst == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return NULL;
+    }
+
+    for (uint16_t i = 0; i < len; i++) {
+        src[i] = vector_double_at(in, i);
+    }
+
+    _iMDCT(len, src, dst);
+
+    struct vector* ret = vector_init();
+    for (uint16_t i = 0; i < len * 2; i++) {
+        vector_push_back_double(ret, dst[i]);
+    }
+
+    free(src);
+    free(dst);
+    
+    return ret;
 }
 
 /* Window function */

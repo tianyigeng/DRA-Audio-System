@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "unitstep.h"
 
-const double STEP[] = {1.0f, 0.5f, 0.0003148f};
+const double STEP[] = {1.0f, 0.5f, 0.3148f};
 
 // print out available steps
 void print_steps() {
