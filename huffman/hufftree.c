@@ -9,8 +9,10 @@
  */
 
 static struct TreeNode* _new_node();
-static void _tree_insert(struct TreeNode* root, uint16_t cnt, 
-                            uint16_t code, uint16_t val);
+static void _tree_insert(struct TreeNode* root, 
+                            uint16_t cnt, 
+                            uint16_t code, 
+                            uint16_t val);
 
 struct TreeNode* build_tree(struct huff_codebook* book) {
     struct TreeNode* root = _new_node();
@@ -45,7 +47,10 @@ static struct TreeNode* _new_node() {
     return n;
 }
 
-static void _tree_insert(struct TreeNode* root, uint16_t bitcnt, uint16_t code, uint16_t val) {
+static void _tree_insert(struct TreeNode* root, 
+                            uint16_t bitcnt, 
+                            uint16_t code, 
+                            uint16_t val) {
     struct TreeNode* curr = root;
     for (int32_t i = bitcnt - 1; i >= 0; i--) {
         uint16_t choice = (code >> i) & 0x1;
