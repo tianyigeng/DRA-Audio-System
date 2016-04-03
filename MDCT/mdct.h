@@ -1,5 +1,5 @@
 /*
- *  General MDCT Implementation
+ *  MDCT Implementation
  *  Copyright (C) 2016 Tianyi Geng
  */
 
@@ -8,10 +8,8 @@
 
 #include "../util/vector.h"
 
-void MDCT(struct vector* in, 
-            struct vector* out);
+struct vector* MDCT(struct vector* in);
 
-void iMDCT(struct vector* in, 
-            struct vector* out);
+struct vector* iMDCT(struct vector* in);
 
 #endif

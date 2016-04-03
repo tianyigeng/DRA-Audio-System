@@ -1,8 +1,14 @@
 #include <stdio.h>
 #include "huffman/huffbook.h"
+#include "huffman/huffcoding.h"
+#include "bitstream/bitstream.h"
+#include "mdct/mdct.h"
+#include "util/vector.h"
+#include "unitstep/unitstep.h"
 
 int main() {
-	printf("%d\n", HuffDec1_7x1.size);
-	printf("%d\n", HuffDec1_7x2.size);
-	return 0;
+    
+
+
+    return 0;
 }

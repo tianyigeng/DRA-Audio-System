@@ -21,6 +21,8 @@ testvec:
 testmdct:
 	gcc control.h \
 	mdct/mdct.c mdct/mdct.h \
+	util/vector.h util/vector.c \
+	util/errors.h util/errors.c \
 	mdct/test_mdct.c
 
 testbs:
