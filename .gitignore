@@ -1,5 +1,3 @@
 *.out
 *.DS_Store
-MDCT/*.py
-MDCT/GeneralMDCT.h.gch
 *.gch
