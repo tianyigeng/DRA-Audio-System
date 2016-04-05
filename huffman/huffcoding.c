@@ -16,9 +16,9 @@ void huff_decode(struct huff_codebook* book,
                     struct bit_stream* src, 
                     struct vector* result) {
     /* a tree to help decoding */
-    struct TreeNode* root = build_tree(book);
+    struct tree_node* root = build_tree(book);
 
-    struct TreeNode* curr = root;
+    struct tree_node* curr = root;
 
     const uint32_t len = bitstream_size(src);
     const uint16_t max_book_indx = book->size - 1;
