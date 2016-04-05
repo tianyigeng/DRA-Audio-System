@@ -19,7 +19,7 @@ static void _inv_unit_step_helper(struct vector* in,    /* input vector */
                                     );
 
 // in  --- vector of double
-// ret --- vector of uint32
+// ret --- vector of int32
 struct vector* unit_step(struct vector* in) {
     struct vector* ret = vector_init();
 
@@ -29,7 +29,7 @@ struct vector* unit_step(struct vector* in) {
     return ret;
 }
 
-// in  --- vector of uint32
+// in  --- vector of int32
 // ret --- vector of double
 struct vector* inv_unit_step(struct vector* in) {
     struct vector* ret = vector_init();
@@ -47,7 +47,7 @@ static void _unit_step_helper(struct vector* in,
                                 uint16_t len, 
                                 uint16_t index) {
     for (uint16_t i = pos; i < pos + len; i++) {
-        vector_push_back_uint32(out, (uint32_t) (vector_double_at(in, i) / STEP[index]));
+        vector_push_back_uint32(out, (int32_t) (vector_double_at(in, i) / STEP[index]));
     }
 }
 
@@ -58,7 +58,7 @@ static void _inv_unit_step_helper(struct vector* in,
                                     uint16_t len, 
                                     uint16_t index) {
     for (uint16_t i = pos; i < pos + len; i++) {
-        vector_push_back_double(out, (double) (vector_uint32_at(in, i)) * STEP[index]);
+        vector_push_back_double(out, (double) (vector_int32_at(in, i)) * STEP[index]);
     }
 }
 
