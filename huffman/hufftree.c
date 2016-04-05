@@ -8,14 +8,14 @@
  *  1 represents the right subtree.
  */
 
-static struct TreeNode* _new_node();
-static void _tree_insert(struct TreeNode* root, 
+static struct tree_node* _new_node();
+static void _tree_insert(struct tree_node* root, 
                             uint16_t cnt, 
                             uint16_t code, 
                             uint16_t val);
 
-struct TreeNode* build_tree(struct huff_codebook* book) {
-    struct TreeNode* root = _new_node();
+struct tree_node* build_tree(struct huff_codebook* book) {
+    struct tree_node* root = _new_node();
     uint16_t currbits = 0;
     for (uint16_t i = 0; i < book->size; i++) {
         currbits += book->bit_incr[i];
@@ -24,7 +24,7 @@ struct TreeNode* build_tree(struct huff_codebook* book) {
     return root;
 }
 
-void erase_tree(struct TreeNode* root) {
+void erase_tree(struct tree_node* root) {
     if (root == NULL) {
         return;
     }
@@ -33,8 +33,8 @@ void erase_tree(struct TreeNode* root) {
     free(root);
 }
 
-static struct TreeNode* _new_node() {
-    struct TreeNode* n = (struct TreeNode*) malloc(sizeof(struct TreeNode));
+static struct tree_node* _new_node() {
+    struct tree_node* n = (struct tree_node*) malloc(sizeof(struct tree_node));
     if (n == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
         return NULL;
@@ -47,11 +47,11 @@ static struct TreeNode* _new_node() {
     return n;
 }
 
-static void _tree_insert(struct TreeNode* root, 
+static void _tree_insert(struct tree_node* root, 
                             uint16_t bitcnt, 
                             uint16_t code, 
                             uint16_t val) {
-    struct TreeNode* curr = root;
+    struct tree_node* curr = root;
     for (int32_t i = bitcnt - 1; i >= 0; i--) {
         uint16_t choice = (code >> i) & 0x1;
         if (choice) {

@@ -4,14 +4,14 @@
 #include <stdint.h>
 #include "huffbook.h"
 
-struct TreeNode {
+struct tree_node {
 	int16_t val;
 	unsigned char is_leaf;
-	struct TreeNode* left;
-	struct TreeNode* right;
+	struct tree_node* left;
+	struct tree_node* right;
 };
 
-struct TreeNode* build_tree(struct huff_codebook* book); /* build a tree to support encoding/decoding */
-void erase_tree(struct TreeNode* root); 				/* free memory */
+struct tree_node* build_tree(struct huff_codebook* book); /* build a tree to support encoding/decoding */
+void erase_tree(struct tree_node* root); 				/* free memory */
 
 #endif
