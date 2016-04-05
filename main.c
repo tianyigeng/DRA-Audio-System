@@ -30,12 +30,12 @@ int main(int argc, char** argv) {
     vector_print_int32(stepped);
 
     struct bit_stream* bs = bitstream_init();
-    huff_encode(&HuffDec1_7x1, stepped, bs);
+    huff_encode(&HuffDec27_256x1, stepped, bs);
     message("After huffman encode:");
     bitstream_print(bs);
     
     struct vector* dehuff = vector_init();
-    huff_decode(&HuffDec1_7x1, bs, dehuff);
+    huff_decode(&HuffDec27_256x1, bs, dehuff);
     message("After huffman decode:");
     vector_print_int32(dehuff);
 

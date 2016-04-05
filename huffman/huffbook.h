@@ -11,6 +11,6 @@ struct huff_codebook {
 };
 
 extern struct huff_codebook HuffDec1_7x1;
-extern struct huff_codebook HuffDec1_7x2;
+extern struct huff_codebook HuffDec27_256x1;
 
 #endif

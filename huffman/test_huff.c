@@ -21,10 +21,10 @@ int main() {
     vector_push_back_int32(v, 0);
     vector_print_int32(v);
 
-    huff_encode(&HuffDec1_7x1, v, bs);
+    huff_encode(&HuffDec27_256x1, v, bs);
     bitstream_print(bs);
     
-    huff_decode(&HuffDec1_7x1, bs, result);
+    huff_decode(&HuffDec27_256x1, bs, result);
     vector_print_int32(result);
 
     vector_destroy(v);
