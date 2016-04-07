@@ -8,12 +8,16 @@
  *  1 represents the right subtree.
  */
 
+/* init a new trie node, alloc extra memory */
 static struct tree_node* _new_node();
+
+/* insert a new node in the trie */
 static void _tree_insert(struct tree_node* root, 
                             uint16_t cnt, 
                             uint16_t code, 
                             uint16_t val);
 
+/* build a tree from the huffman code book */
 struct tree_node* build_tree(struct huff_codebook* book) {
     struct tree_node* root = _new_node();
     uint16_t currbits = 0;
@@ -24,6 +28,7 @@ struct tree_node* build_tree(struct huff_codebook* book) {
     return root;
 }
 
+/* free the memory to prevent from memory leakage */
 void erase_tree(struct tree_node* root) {
     if (root == NULL) {
         return;
