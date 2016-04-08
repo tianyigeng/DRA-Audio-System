@@ -19,8 +19,8 @@ int main() {
     struct vector* recv = inv_unit_step(out);
     vector_print_double(recv);
 
-    vector_destroy(v);
-    vector_destroy(out);
-    vector_destroy(recv);
+    vector_destroy(v, NULL);
+    vector_destroy(out, NULL);
+    vector_destroy(recv, NULL);
     return 0;
 }

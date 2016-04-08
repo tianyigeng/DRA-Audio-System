@@ -43,11 +43,11 @@ int main(int argc, char** argv) {
     message("After inv unit step:");
     vector_print_double(destep);
 
-    vector_destroy(test_data);
-    vector_destroy(mdct);
-    vector_destroy(destep);
-    vector_destroy(stepped);
-    vector_destroy(dehuff);
+    vector_destroy(test_data, NULL);
+    vector_destroy(mdct, NULL);
+    vector_destroy(destep, NULL);
+    vector_destroy(stepped, NULL);
+    vector_destroy(dehuff, NULL);
     bitstream_destroy(bs);
     return 0;
 }

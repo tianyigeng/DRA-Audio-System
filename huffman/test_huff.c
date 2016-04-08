@@ -27,7 +27,7 @@ int main() {
     huff_decode(&HuffDec27_256x1, bs, result);
     vector_print_int32(result);
 
-    vector_destroy(v);
-    vector_destroy(result);
+    vector_destroy(v, NULL);
+    vector_destroy(result, NULL);
     bitstream_destroy(bs);
 }

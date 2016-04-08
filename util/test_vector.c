@@ -9,6 +9,7 @@ int main() {
     vector_print_int32(v);
     vector_pop_back(v);
     vector_print_int32(v);
-    vector_destroy(v);
+    
+    vector_destroy(v, NULL);
     return 0;
 }

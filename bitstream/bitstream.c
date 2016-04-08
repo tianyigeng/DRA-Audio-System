@@ -50,7 +50,7 @@ void bitstream_print(struct bit_stream* bs) {
 }
 
 void bitstream_destroy(struct bit_stream* bs) {
-    vector_destroy(bs->vec);
+    vector_destroy(bs->vec, NULL);
     free(bs);
 }
 

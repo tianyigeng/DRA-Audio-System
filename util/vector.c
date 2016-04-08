@@ -29,9 +29,17 @@ struct vector* vector_init() {
     return v;
 }
 
-void vector_destroy(struct vector* v) {
+void vector_destroy(struct vector* v, void (*free_func)(void*)) {
+    if (free_func == NULL) {
+        for (uint32_t i = 0; i < v->size; i++) {
+            free(v->buf[i]);
+        }
+        free(v->buf);
+        free(v);
+        return;
+    }
     for (uint32_t i = 0; i < v->size; i++) {
-        free(v->buf[i]);
+        free_func(v->buf[i]);
     }
     free(v->buf);
     free(v);
