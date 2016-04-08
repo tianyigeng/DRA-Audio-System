@@ -17,6 +17,10 @@ Huffman Coding: https://en.wikipedia.org/wiki/Huffman_coding
 
 Bitstream
 
+Supportive submodules:
+- vector (c++ like)
+- error handling
+
 ## Tech Stack
 
 Main Language: C
@@ -26,7 +30,7 @@ Start: Dec. 28, 2015
 
 Proposal: Jan. 19, 2016
 
-Mid-Check: Apr. 20, 2016
+Mid-Check: Apr. 15, 2016
 
 Defense: TBD
 
