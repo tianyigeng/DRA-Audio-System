@@ -31,13 +31,12 @@ struct vector* vector_init() {
 
 void vector_destroy(struct vector* v, void (*free_func)(void*)) {
     if (free_func == NULL) {
-        for (uint32_t i = 0; i < v->size; i++) {
-            free(v->buf[i]);
-        }
-        free(v->buf);
-        free(v);
-        return;
+        /*
+         *  Unless specified, we use the standard free.
+         */
+        free_func = free;
     }
+
     for (uint32_t i = 0; i < v->size; i++) {
         free_func(v->buf[i]);
     }
