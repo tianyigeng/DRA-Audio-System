@@ -17,6 +17,7 @@ int main() {
 
     {
         printf("\n\nTest case2:\n");
+        /* 2-d vectors */
         struct vector* v = vector_init();
         for (int i = 0; i < 5; i++) {
             vector_push_back_object(v, (void*) vector_init());
