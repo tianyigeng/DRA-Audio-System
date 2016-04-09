@@ -107,6 +107,17 @@ void vector_push_back_double(struct vector* v, double elem) {
     _vector_push_back(v, (void*) e);
 }
 
+void vector_push_back_object(struct vector* v, void* elem) {
+    void** e = (void**) malloc(sizeof(double));
+    if (e == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return;
+    }
+    *e = elem;
+
+    _vector_push_back(v, (void*) e);
+}
+
 void vector_pop_back(struct vector* v) {
     if (v->size == 0) {
         handle_error(ERROR_CONTAINER_EMPTY);
@@ -144,6 +155,15 @@ double vector_double_at(struct vector* v, uint32_t pos) {
     return *(double*)(v->buf[pos]);
 }
 
+void* vector_object_at(struct vector* v, uint32_t pos) {
+    if (pos >= v->size) {
+        handle_error(ERROR_INDEX_OUT_OF_BOUND);
+        return NULL;
+    }
+
+    return *(void**)(v->buf[pos]);
+}
+
 static void _vector_push_back(struct vector* v, void* elem) {
     if (v->size == v->cap) {
         _vector_grow(v);
@@ -160,6 +180,11 @@ static void _vector_grow(struct vector* v) {
     }
     
     v->cap *= SCALE;
+}
+
+void free_func_2dvec(void* vec) {
+    struct vector* v = (struct vector*) vec;
+    vector_destroy(v, NULL);
 }
 
 #endif
