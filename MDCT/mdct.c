@@ -17,13 +17,40 @@
 static inline double _win_func(const int M, const int n);
 static void _MDCT(const int M, const double* x, double* X);
 static void _iMDCT(const int M, const double* X, double* x);
+static struct vector* _MDCT_frame(struct vector* in);
+static struct vector* _iMDCT_frame(struct vector* in);
+
+const uint16_t frame_size = 256;
+
+/* 
+ *   in  -- 1-d vector of double
+ *   ret -- 2-d vector of double
+ *   ret value is MDCT of in
+ */
+struct vector* MDCT(struct vector* in) {
+    struct vector* ret = vector_init(); /* 2-d vector */
+
+    for (uint16_t i = 0; frame_size / 2 * i < in->size; i++) {
+        vector_push_back_object(ret, vector_sub(in, frame_size * i, frame_size));
+    }
+
+    return ret;
+}
+
+struct vector* iMDCT(struct vector* in) {
+    struct vector* ret = vector_init();
+
+
+
+    return ret;
+}
 
 /* 
  *   in  -- vector of double
  *   ret -- vector of double
  *   ret value is MDCT of in
  */
-struct vector* MDCT(struct vector* in) {
+static struct vector* _MDCT_frame(struct vector* in) {
     uint16_t len = in->size;
 
     double* src = (double*) malloc(sizeof(double) * len);
@@ -55,7 +82,7 @@ struct vector* MDCT(struct vector* in) {
  *   ret -- vector of double
  *   ret value is inverse MDCT of in
  */
-struct vector* iMDCT(struct vector* in) {
+static struct vector* _iMDCT_frame(struct vector* in) {
     uint16_t len = in->size;
 
     double* src = (double*) malloc(sizeof(double) * len);

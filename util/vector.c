@@ -164,6 +164,27 @@ void* vector_object_at(struct vector* v, uint32_t pos) {
     return *(void**)(v->buf[pos]);
 }
 
+struct vector* vector_sub(struct vector* v, 
+                            uint32_t pos, 
+                            uint32_t len) {
+    struct vector* ret = vector_init();
+
+    for (uint32_t i = 0; i < len; i++) {
+        vector_push_back_int32(ret, 
+                pos + i >= v->size ? 
+                    0 : 
+                    vector_int32_at(v, pos + i)
+        );
+    }
+
+    return ret;
+}
+
+void free_func_2dvec(void* vec) {
+    struct vector* v = (struct vector*) vec;
+    vector_destroy(v, NULL);
+}
+
 static void _vector_push_back(struct vector* v, void* elem) {
     if (v->size == v->cap) {
         _vector_grow(v);
@@ -180,11 +201,6 @@ static void _vector_grow(struct vector* v) {
     }
     
     v->cap *= SCALE;
-}
-
-void free_func_2dvec(void* vec) {
-    struct vector* v = (struct vector*) vec;
-    vector_destroy(v, NULL);
 }
 
 #endif

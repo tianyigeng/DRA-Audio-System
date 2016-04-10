@@ -9,7 +9,6 @@
 #include "../util/vector.h"
 
 struct vector* MDCT(struct vector* in);
-
 struct vector* iMDCT(struct vector* in);
 
 #endif

@@ -15,6 +15,14 @@ struct vector {
 struct vector* vector_init();                                    /* constructor */
 void vector_destroy(struct vector* v, void (*free_func)(void*)); /* destructor */
 
+struct vector* vector_sub(struct vector* v, 
+                            uint32_t i, 
+                            uint32_t len);  
+                              /* return a subvector of orig vector, 
+                               * starting at index i, length len, 
+                               * padding with 0 if overflow.
+                               */
+
 void vector_print_int32(struct vector* v);      /* print the vector as int */
 void vector_print_double(struct vector* v);     /* print the vector as double */
 
