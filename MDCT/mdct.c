@@ -20,7 +20,7 @@ static void _iMDCT(const int M, const double* X, double* x);
 static struct vector* _MDCT_frame(struct vector* in);
 static struct vector* _iMDCT_frame(struct vector* in);
 
-const uint16_t frame_size = 256;
+const uint16_t frame_size = 8;
 
 /* 
  *   in  -- 1-d vector of double
@@ -30,17 +30,65 @@ const uint16_t frame_size = 256;
 struct vector* MDCT(struct vector* in) {
     struct vector* ret = vector_init(); /* 2-d vector */
 
-    for (uint16_t i = 0; frame_size / 2 * i < in->size; i++) {
-        vector_push_back_object(ret, vector_sub(in, frame_size * i, frame_size));
+    struct vector* helper = vector_init(); /* a helper vector to make logic clear */
+    for (uint16_t i = 0; i < frame_size / 2; i++) {
+        vector_push_back_double(helper, 0.0);
     }
+    for (uint16_t i = 0; i < in->size; i++) {
+        vector_push_back_double(helper, vector_double_at(in, i));
+    }
+    for (uint16_t i = 0; i < frame_size / 2; i++) {
+        vector_push_back_double(helper, 0.0);
+    }
+
+    for (uint16_t i = 0; frame_size / 2 * (i + 1) < helper->size; i++) {
+        struct vector* frame = vector_sub(helper, frame_size / 2 * i, frame_size);
+        // vector_print_double(frame);
+        vector_push_back_object(ret, _MDCT_frame(frame));
+        vector_destroy(frame, NULL);
+    }
+
+    vector_destroy(helper, NULL);
 
     return ret;
 }
 
+/* 
+ *   in  -- 2-d vector of double
+ *   ret -- 1-d vector of double
+ *   ret value is iMDCT of in
+ */
 struct vector* iMDCT(struct vector* in) {
     struct vector* ret = vector_init();
 
+    struct vector* prev_frame = NULL;
 
+    for (uint16_t i = 0; i < in->size; i++) {
+        struct vector* frame = _iMDCT_frame(
+                (struct vector*) vector_object_at(in, i)
+            );
+
+        if (i == 0) {
+            /* 
+             * we need to deal with overlapping mdct frames, so omit the first frame
+             */
+            prev_frame = frame;
+            continue;
+        }
+
+        /* perfect reconstruction */
+        for (uint16_t j = 0; j < frame_size / 2; j++) {
+            vector_push_back_double(ret, 
+                    vector_double_at(prev_frame, frame_size / 2 + j)
+                    +
+                    vector_double_at(frame, j)
+                );
+        }
+
+        vector_destroy(prev_frame, NULL);
+        prev_frame = frame;
+    }
+    vector_destroy(prev_frame, NULL);
 
     return ret;
 }

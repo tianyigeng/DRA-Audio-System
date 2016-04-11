@@ -13,8 +13,12 @@ int main(int argc, char** argv) {
     vector_print_double(test_data);
 
     struct vector* out = MDCT(test_data);
-    vector_print_double(out);
+    printf("\nintermediate results:\n");
+    for (uint16_t i = 0; i < out->size; i++) {
+        vector_print_double((struct vector*) vector_object_at(out, i));
+    }
 
+    printf("\n\nrecv:\n\n");
     struct vector* recv = iMDCT(out);
     vector_print_double(recv);
 

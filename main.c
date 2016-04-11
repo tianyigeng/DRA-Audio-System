@@ -23,7 +23,10 @@ int main(int argc, char** argv) {
 
     struct vector* mdct = MDCT(test_data);
     message("After MDCT:");
-    vector_print_double(mdct);
+    for (uint16_t i = 0; i < mdct->size; i++) {
+        vector_print_double((struct vector*) vector_object_at(mdct, i));
+    }
+    
 
     struct vector* stepped = unit_step(mdct);
     message("After unit step:");

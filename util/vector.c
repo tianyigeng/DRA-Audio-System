@@ -170,10 +170,10 @@ struct vector* vector_sub(struct vector* v,
     struct vector* ret = vector_init();
 
     for (uint32_t i = 0; i < len; i++) {
-        vector_push_back_int32(ret, 
+        vector_push_back_double(ret, 
                 pos + i >= v->size ? 
-                    0 : 
-                    vector_int32_at(v, pos + i)
+                    0.0 : 
+                    vector_double_at(v, pos + i)
         );
     }
 
