@@ -38,8 +38,13 @@ void vector_destroy(struct vector* v, void (*free_func)(void*)) {
     }
 
     for (uint32_t i = 0; i < v->size; i++) {
-        free_func(v->buf[i]);
+        if (free_func == free) {
+            free_func(v->buf[i]); /* free a primitive type */
+        } else {
+            free_func(*(void**)(v->buf[i])); /* free an object */
+        }
     }
+
     free(v->buf);
     free(v);
 }

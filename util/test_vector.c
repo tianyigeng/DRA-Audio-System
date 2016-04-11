@@ -27,7 +27,7 @@ int main() {
             vector_print_int32((struct vector*) vector_object_at(v, i));
         }
         
-        vector_destroy(v, NULL);
+        vector_destroy(v, free_func_2dvec);
     }
 
     return 0;
