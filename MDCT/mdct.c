@@ -18,7 +18,7 @@
 static struct vector* _MDCT_frame(struct mdct_plan* m_plan, struct vector* in);
 static struct vector* _iMDCT_frame(struct mdct_plan* m_plan, struct vector* in);
 
-const uint32_t frame_size = 256;
+const uint32_t frame_size = 16;
 
 /* 
  *   in  -- 1-d vector of double
@@ -82,11 +82,9 @@ struct vector* iMDCT(struct vector* in) {
         /* perfect reconstruction */
         for (uint32_t j = 0; j < frame_size / 2; j++) {
             vector_push_back_double(ret, 
-                    0.5 * (
-                        vector_double_at(prev_frame, frame_size / 2 + j)
-                        +
-                        vector_double_at(frame, j)
-                    )
+                    vector_double_at(prev_frame, frame_size / 2 + j)
+                    +
+                    vector_double_at(frame, j)
                 );
         }
 

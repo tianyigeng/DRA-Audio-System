@@ -13,6 +13,11 @@
 #define FFTW_DESTROY  fftw_destroy_plan 
 #define FFTW_EXECUTE  fftw_execute
 
+/* Window function */
+static inline double _win_func(int M, int n) {
+    return sin(M_PI * (n + 0.5) / (2.0 * M));
+}
+
 void mdct_free(struct mdct_plan* m_plan)
 {
     if(m_plan) 
@@ -96,6 +101,11 @@ void mdct(FLOAT* mdct_line, FLOAT* time_signal, struct mdct_plan* m_plan)
     cos_tw = m_plan->twiddle;
     sin_tw = cos_tw + 1; 
     
+    /* window applying */
+    for (n = 0; n < 2 * M; n++) {
+        time_signal[n] *= _win_func(M, n);
+    }
+
     /* odd/even folding and pre-twiddle */
     xr = (FLOAT*) m_plan->fft_in;
     xi = xr + 1;
@@ -209,6 +219,11 @@ void imdct(FLOAT* time_signal, FLOAT* mdct_line, struct mdct_plan* m_plan)
         time_signal[-M2+n]   = -r1;
         time_signal[M2+n]    =  i1;
         time_signal[M52-1-n] =  i1;
+    }
+
+    /* window applying */
+    for (n = 0; n < 2 * M; n++) {
+        time_signal[n] *= _win_func(M, n);
     }
 }
 
