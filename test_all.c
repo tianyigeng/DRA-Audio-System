@@ -13,12 +13,11 @@ static inline void message(const char* in) {
 
 int main(int argc, char** argv) {
 
-    const int SIZE = 16 * 2;
+    const int SIZE = 2048 * 128;
     
     struct vector* test_data = vector_init();
     for (uint32_t i = 0; i < SIZE; i++) {
-        vector_push_back_double(test_data, (rand() % 10000) / 1000.0);
-        printf("%d\n", i);
+        vector_push_back_double(test_data, (rand() % 10000) / 10000.0);
     }
     message("Original data:");
     vector_print_double(test_data);

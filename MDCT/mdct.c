@@ -18,7 +18,7 @@
 static struct vector* _MDCT_frame(struct mdct_plan* m_plan, struct vector* in);
 static struct vector* _iMDCT_frame(struct mdct_plan* m_plan, struct vector* in);
 
-const uint32_t frame_size = 16;
+const uint32_t frame_size = 2048;
 
 /* 
  *   in  -- 1-d vector of double
