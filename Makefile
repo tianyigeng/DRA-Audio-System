@@ -64,7 +64,7 @@ testhuff:
 	huffman/test_huff.c
 
 clean:
-	-@rm *.gch */*.gch *.out */*.out 2> /dev/null || true
+	-@find . -name \*.gch -print -o -name \*.out | xargs rm || true
 
 count:
 	-@find . -name \*.h -print -o -name Makefile -print -o -name \*.c -print | xargs cat | wc -l
