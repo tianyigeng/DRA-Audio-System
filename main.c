@@ -12,7 +12,7 @@ static inline void message(const char* in) {
 
 int main(int argc, char** argv) {
 
-    const int SIZE = 32;
+    const int SIZE = 16 * 8;
     
     struct vector* test_data = vector_init();
     for (uint16_t i = 0; i < SIZE; i++) {
@@ -32,21 +32,21 @@ int main(int argc, char** argv) {
         struct vector* tomdct = (struct vector*) vector_object_at(mdct, i);
         struct vector* stepped = unit_step(tomdct);
         message("After unit step:");
-        vector_print_int32(stepped);
+        // vector_print_int32(stepped);
 
         struct bit_stream* bs = bitstream_init();
         huff_encode(&HuffDec27_256x1, stepped, bs);
         message("After huffman encode:");
-        bitstream_print(bs);
+        // bitstream_print(bs);
         
         struct vector* dehuff = vector_init();
         huff_decode(&HuffDec27_256x1, bs, dehuff);
         message("After huffman decode:");
-        vector_print_int32(dehuff);
+        // vector_print_int32(dehuff);
 
         struct vector* destep = inv_unit_step(dehuff);
         message("After inv unit step:");
-        vector_print_double(destep);
+        // vector_print_double(destep);
 
         vector_push_back_object(pre_imdct, (struct vector*) destep);
 
