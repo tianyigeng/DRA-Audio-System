@@ -20,7 +20,7 @@ static void _iMDCT(const int M, const double* X, double* x);
 static struct vector* _MDCT_frame(struct vector* in);
 static struct vector* _iMDCT_frame(struct vector* in);
 
-const uint16_t frame_size = 16;
+const uint16_t frame_size = 2048;
 
 /* 
  *   in  -- 1-d vector of double

@@ -1,14 +1,9 @@
-#ifndef __MAIN_C_
-#define __MAIN_C_
-
 #include <stdio.h>
-#include <stdlib.h>
 #include "huffman/huffbook.h"
 #include "huffman/huffcoding.h"
 #include "bitstream/bitstream.h"
 #include "mdct/mdct.h"
 #include "util/vector.h"
-#include "util/errors.h"
 #include "unitstep/unitstep.h"
 
 static inline void message(const char* in) {
@@ -16,31 +11,16 @@ static inline void message(const char* in) {
 }
 
 int main(int argc, char** argv) {
-    const char* in_file = "audio/in.pcm";
-    const char* out_file = "audio/out.pcm";
+
+    const int SIZE = 2048 * 24;
     
-    /* read input data */
     struct vector* test_data = vector_init();
-
-    FILE* fp_in = fopen(in_file, "r");
-    
-    double* buf = (double*) malloc(sizeof(double));
-    if (buf == NULL) {
-        handle_error(ERROR_FAILURE_ALLOC_MEM);
-        return -1;
+    for (uint16_t i = 0; i < SIZE; i++) {
+        vector_push_back_double(test_data, (9.0 - i) / 1000.0);
     }
-
-    while (fscanf(fp_in, "%lf\n", buf) == 1) {
-        vector_push_back_double(test_data, *buf);
-    }
-
-    free(buf);
-    fclose(fp_in);
-
     message("Original data:");
     vector_print_double(test_data);
 
-    /* processing */
     struct vector* mdct = MDCT(test_data);
     message("After MDCT:");
     for (uint16_t i = 0; i < mdct->size; i++) {
@@ -74,18 +54,15 @@ int main(int argc, char** argv) {
         vector_destroy(dehuff, NULL);
         bitstream_destroy(bs);
     }
+    
+    for (uint16_t i = 0; i < pre_imdct->size; i++) {
+        vector_print_double((struct vector*) vector_object_at(pre_imdct, i));
+    }
 
     message("After iMDCT:");
     struct vector* after_imdct = iMDCT(pre_imdct);
+    vector_print_double(after_imdct);
 
-    /* dump data */
-    FILE* fp_out = fopen(out_file, "w");
-    for (uint16_t i = 0; i < after_imdct->size; i++) {
-        fprintf(fp_out, "%.6f", vector_double_at(after_imdct, i));
-    }
-    fclose(fp_out);
-
-    /* release memory */
     message("Releasing memory...");
     vector_destroy(mdct, free_func_2dvec);
 
@@ -97,5 +74,3 @@ int main(int argc, char** argv) {
     
     return 0;
 }
-
-#endif

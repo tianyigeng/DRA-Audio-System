@@ -1,4 +1,4 @@
-dev: 
+dev:
 	gcc main.c control.h \
 	util/errors.h util/errors.c \
 	huffman/huffbook.c huffman/huffbook.h \
@@ -11,6 +11,17 @@ dev:
 
 config:
 	python configure/config.py
+
+testall: 
+	gcc test_all.c control.h \
+	util/errors.h util/errors.c \
+	huffman/huffbook.c huffman/huffbook.h \
+	huffman/huffcoding.c huffman/huffcoding.h \
+	huffman/hufftree.c huffman/hufftree.h \
+	unitstep/unitstep.h unitstep/unitstep.c unitstep/steps.c \
+	mdct/mdct.c mdct/mdct.h \
+	bitstream/bitstream.c bitstream/bitstream.h \
+	util/vector.c util/vector.h
 
 testvec:
 	gcc control.h \
