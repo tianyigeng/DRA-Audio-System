@@ -6,8 +6,9 @@ dev:
 	huffman/hufftree.c huffman/hufftree.h \
 	unitstep/unitstep.h unitstep/unitstep.c unitstep/steps.c \
 	mdct/mdct.c mdct/mdct.h \
+	mdct/fastmdct/mdct_fft.c mdct/fastmdct/mdct_fft.h \
 	bitstream/bitstream.c bitstream/bitstream.h \
-	util/vector.c util/vector.h
+	util/vector.c util/vector.h -lfftw3
 
 config:
 	python configure/config.py
@@ -20,21 +21,23 @@ testall:
 	huffman/hufftree.c huffman/hufftree.h \
 	unitstep/unitstep.h unitstep/unitstep.c unitstep/steps.c \
 	mdct/mdct.c mdct/mdct.h \
+	mdct/fastmdct/mdct_fft.c mdct/fastmdct/mdct_fft.h \
 	bitstream/bitstream.c bitstream/bitstream.h \
-	util/vector.c util/vector.h
+	util/vector.c util/vector.h -lfftw3
 
 testvec:
 	gcc control.h \
 	util/errors.h util/errors.c \
 	util/vector.c util/vector.h \
-	util/test_vector.c
+	util/test_vector.c 
 
 testmdct:
 	gcc control.h \
 	mdct/mdct.c mdct/mdct.h \
+	mdct/fastmdct/mdct_fft.c mdct/fastmdct/mdct_fft.h \
 	util/vector.h util/vector.c \
 	util/errors.h util/errors.c \
-	mdct/test_mdct.c
+	mdct/test_mdct.c -lfftw3
 
 testbs:
 	gcc control.h \

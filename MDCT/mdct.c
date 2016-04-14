@@ -10,17 +10,15 @@
 #include <stdlib.h>
 #include "mdct.h"
 #include "../util/errors.h"
+#include "fastmdct/mdct_fft.h"
 
 /*
  *  Forward declarations of helper functions.
  */
-static inline double _win_func(const int M, const int n);
-static void _MDCT(const int M, const double* x, double* X);
-static void _iMDCT(const int M, const double* X, double* x);
-static struct vector* _MDCT_frame(struct vector* in);
-static struct vector* _iMDCT_frame(struct vector* in);
+static struct vector* _MDCT_frame(struct mdct_plan* m_plan, struct vector* in);
+static struct vector* _iMDCT_frame(struct mdct_plan* m_plan, struct vector* in);
 
-const uint16_t frame_size = 2048;
+const uint32_t frame_size = 256;
 
 /* 
  *   in  -- 1-d vector of double
@@ -30,24 +28,26 @@ const uint16_t frame_size = 2048;
 struct vector* MDCT(struct vector* in) {
     struct vector* ret = vector_init(); /* 2-d vector */
 
+    struct mdct_plan* m_plan = mdct_init(frame_size / 2);
+
     struct vector* helper = vector_init(); /* a helper vector to make logic clear */
-    for (uint16_t i = 0; i < frame_size / 2; i++) {
+    for (uint32_t i = 0; i < frame_size / 2; i++) {
         vector_push_back_double(helper, 0.0);
     }
-    for (uint16_t i = 0; i < in->size; i++) {
+    for (uint32_t i = 0; i < in->size; i++) {
         vector_push_back_double(helper, vector_double_at(in, i));
     }
-    for (uint16_t i = 0; i < frame_size / 2; i++) {
+    for (uint32_t i = 0; i < frame_size / 2; i++) {
         vector_push_back_double(helper, 0.0);
     }
 
-    for (uint16_t i = 0; frame_size / 2 * (i + 1) < helper->size; i++) {
+    for (uint32_t i = 0; frame_size / 2 * (i + 1) < helper->size; i++) {
         struct vector* frame = vector_sub(helper, frame_size / 2 * i, frame_size);
-        // vector_print_double(frame);
-        vector_push_back_object(ret, _MDCT_frame(frame));
+        vector_push_back_object(ret, _MDCT_frame(m_plan, frame));
         vector_destroy(frame, NULL);
     }
 
+    mdct_free(m_plan);
     vector_destroy(helper, NULL);
 
     return ret;
@@ -61,10 +61,13 @@ struct vector* MDCT(struct vector* in) {
 struct vector* iMDCT(struct vector* in) {
     struct vector* ret = vector_init();
 
+    struct mdct_plan* m_plan = mdct_init(frame_size / 2);
+
     struct vector* prev_frame = NULL;
 
-    for (uint16_t i = 0; i < in->size; i++) {
+    for (uint32_t i = 0; i < in->size; i++) {
         struct vector* frame = _iMDCT_frame(
+                m_plan, 
                 (struct vector*) vector_object_at(in, i)
             );
 
@@ -77,29 +80,34 @@ struct vector* iMDCT(struct vector* in) {
         }
 
         /* perfect reconstruction */
-        for (uint16_t j = 0; j < frame_size / 2; j++) {
+        for (uint32_t j = 0; j < frame_size / 2; j++) {
             vector_push_back_double(ret, 
-                    vector_double_at(prev_frame, frame_size / 2 + j)
-                    +
-                    vector_double_at(frame, j)
+                    0.5 * (
+                        vector_double_at(prev_frame, frame_size / 2 + j)
+                        +
+                        vector_double_at(frame, j)
+                    )
                 );
         }
 
         vector_destroy(prev_frame, NULL);
         prev_frame = frame;
     }
+
+    mdct_free(m_plan);
     vector_destroy(prev_frame, NULL);
 
     return ret;
 }
 
 /* 
+ *   Compute the MDCT of a frame
  *   in  -- vector of double
  *   ret -- vector of double
  *   ret value is MDCT of in
  */
-static struct vector* _MDCT_frame(struct vector* in) {
-    uint16_t len = in->size;
+static struct vector* _MDCT_frame(struct mdct_plan* m_plan, struct vector* in) {
+    uint32_t len = in->size;
 
     double* src = (double*) malloc(sizeof(double) * len);
     double* dst = (double*) malloc(sizeof(double) * len / 2);
@@ -108,14 +116,15 @@ static struct vector* _MDCT_frame(struct vector* in) {
         return NULL;
     }
 
-    for (uint16_t i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         src[i] = vector_double_at(in, i);
     }
 
-    _MDCT(len / 2, src, dst);
+    mdct(dst, src, m_plan);
 
     struct vector* ret = vector_init();
-    for (uint16_t i = 0; i < len / 2; i++) {
+
+    for (uint32_t i = 0; i < len / 2; i++) {
         vector_push_back_double(ret, dst[i]);
     }
 
@@ -126,12 +135,13 @@ static struct vector* _MDCT_frame(struct vector* in) {
 }
 
 /* 
+ *   Compute the iMDCT of a frame
  *   in  -- vector of double
  *   ret -- vector of double
  *   ret value is inverse MDCT of in
  */
-static struct vector* _iMDCT_frame(struct vector* in) {
-    uint16_t len = in->size;
+static struct vector* _iMDCT_frame(struct mdct_plan* m_plan, struct vector* in) {
+    uint32_t len = in->size;
 
     double* src = (double*) malloc(sizeof(double) * len);
     double* dst = (double*) malloc(sizeof(double) * len * 2);
@@ -140,14 +150,14 @@ static struct vector* _iMDCT_frame(struct vector* in) {
         return NULL;
     }
 
-    for (uint16_t i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         src[i] = vector_double_at(in, i);
     }
 
-    _iMDCT(len, src, dst);
+    imdct(dst, src, m_plan);
 
     struct vector* ret = vector_init();
-    for (uint16_t i = 0; i < len * 2; i++) {
+    for (uint32_t i = 0; i < len * 2; i++) {
         vector_push_back_double(ret, dst[i]);
     }
 
@@ -155,34 +165,6 @@ static struct vector* _iMDCT_frame(struct vector* in) {
     free(dst);
     
     return ret;
-}
-
-/* Window function */
-static inline double _win_func(const int M, const int n) {
-    return sin(M_PI * (n + 0.5) / (2.0 * M));
-}
-
-/* 
- *  M denotes the length of output signal, len(src) should be 2 * M 
- */
-static void _MDCT(const int M, const double* x, double* X) {
-    for (int k = 0; k < M; k++) {
-        X[k] = 0.0;
-        for (int n = 0; n < 2 * M; n++) {
-            X[k] += x[n] * _win_func(M, n) * cos(M_PI * (n + .5 + .5 * M) * (k + .5) / M);
-        }
-        X[k] *= sqrt(2.0 / M);
-    }
-}
-
-static void _iMDCT(const int M, const double* X, double* x) {
-    for (int n = 0; n < 2 * M; n++) {
-        x[n] = 0.0;
-        for (int k = 0; k < M; k++) {
-            x[n] += X[k] * cos(M_PI * (n + .5 * (1. + M)) * (k + .5)/ M);
-        }
-        x[n] *= _win_func(M, n) * sqrt(2.0 / M);
-    }
 }
 
 #endif

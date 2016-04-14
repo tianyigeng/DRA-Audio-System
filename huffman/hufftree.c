@@ -13,15 +13,15 @@ static struct tree_node* _new_node();
 
 /* insert a new node in the trie */
 static void _tree_insert(struct tree_node* root, 
-                            uint16_t cnt, 
-                            uint16_t code, 
-                            uint16_t val);
+                            uint32_t cnt, 
+                            uint32_t code, 
+                            uint32_t val);
 
 /* build a tree from the huffman code book */
 struct tree_node* build_tree(struct huff_codebook* book) {
     struct tree_node* root = _new_node();
-    uint16_t currbits = 0;
-    for (uint16_t i = 0; i < book->size; i++) {
+    uint32_t currbits = 0;
+    for (uint32_t i = 0; i < book->size; i++) {
         currbits += book->bit_incr[i];
         _tree_insert(root, currbits, book->code[i], book->index[i]);
     }
@@ -53,12 +53,12 @@ static struct tree_node* _new_node() {
 }
 
 static void _tree_insert(struct tree_node* root, 
-                            uint16_t bitcnt, 
-                            uint16_t code, 
-                            uint16_t val) {
+                            uint32_t bitcnt, 
+                            uint32_t code, 
+                            uint32_t val) {
     struct tree_node* curr = root;
     for (int32_t i = bitcnt - 1; i >= 0; i--) {
-        uint16_t choice = (code >> i) & 0x1;
+        uint32_t choice = (code >> i) & 0x1;
         if (choice) {
             if (!curr->right) {
                 curr->right = _new_node();

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "huffman/huffbook.h"
 #include "huffman/huffcoding.h"
 #include "bitstream/bitstream.h"
@@ -12,40 +13,43 @@ static inline void message(const char* in) {
 
 int main(int argc, char** argv) {
 
-    const int SIZE = 2048 * 24;
+    const int SIZE = 2048 * 64;
     
     struct vector* test_data = vector_init();
-    for (uint16_t i = 0; i < SIZE; i++) {
-        vector_push_back_double(test_data, (9.0 - i) / 1000.0);
+    for (uint32_t i = 0; i < SIZE; i++) {
+        vector_push_back_double(test_data, (rand() % 10000) / 10000.0);
+        printf("%d\n", i);
     }
     message("Original data:");
     vector_print_double(test_data);
 
+    printf("mdct begin\n");
     struct vector* mdct = MDCT(test_data);
-    message("After MDCT:");
-    for (uint16_t i = 0; i < mdct->size; i++) {
-        vector_print_double((struct vector*) vector_object_at(mdct, i));
-    }
+    printf("mdct done\n");
+    // message("After MDCT:");
+    // for (uint32_t i = 0; i < mdct->size; i++) {
+    //     vector_print_double((struct vector*) vector_object_at(mdct, i));
+    // }
     
     struct vector* pre_imdct = vector_init();
-    for (uint16_t i = 0; i < mdct->size; i++) {
+    for (uint32_t i = 0; i < mdct->size; i++) {
         struct vector* tomdct = (struct vector*) vector_object_at(mdct, i);
         struct vector* stepped = unit_step(tomdct);
-        message("After unit step:");
+        // message("After unit step:");
         // vector_print_int32(stepped);
 
         struct bit_stream* bs = bitstream_init();
         huff_encode(&HuffDec27_256x1, stepped, bs);
-        message("After huffman encode:");
+        // message("After huffman encode:");
         // bitstream_print(bs);
         
         struct vector* dehuff = vector_init();
         huff_decode(&HuffDec27_256x1, bs, dehuff);
-        message("After huffman decode:");
+        // message("After huffman decode:");
         // vector_print_int32(dehuff);
 
         struct vector* destep = inv_unit_step(dehuff);
-        message("After inv unit step:");
+        // message("After inv unit step:");
         // vector_print_double(destep);
 
         vector_push_back_object(pre_imdct, (struct vector*) destep);
@@ -55,9 +59,9 @@ int main(int argc, char** argv) {
         bitstream_destroy(bs);
     }
     
-    for (uint16_t i = 0; i < pre_imdct->size; i++) {
-        vector_print_double((struct vector*) vector_object_at(pre_imdct, i));
-    }
+    // for (uint32_t i = 0; i < pre_imdct->size; i++) {
+    //     vector_print_double((struct vector*) vector_object_at(pre_imdct, i));
+    // }
 
     message("After iMDCT:");
     struct vector* after_imdct = iMDCT(pre_imdct);

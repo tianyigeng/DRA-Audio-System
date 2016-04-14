@@ -56,8 +56,8 @@ void bitstream_destroy(struct bit_stream* bs) {
 
 void bitstream_push_str(struct bit_stream* bs, 
                         const char* str) {
-    uint16_t len = strlen(str);
-    for (uint16_t i = 0; i < len; i++) {
+    uint32_t len = strlen(str);
+    for (uint32_t i = 0; i < len; i++) {
         if (str[i] != '0' && str[i] != '1') {
             handle_error(ERROR_INVALID_ARGV);
         }
@@ -68,8 +68,8 @@ void bitstream_push_str(struct bit_stream* bs,
 
 void bitstream_push(
     struct bit_stream* bs, 
-    uint16_t target,     /* holder of the bits */
-    uint16_t bits        /* how many bits to write */
+    uint32_t target,     /* holder of the bits */
+    uint32_t bits        /* how many bits to write */
     ) {
 
     /*

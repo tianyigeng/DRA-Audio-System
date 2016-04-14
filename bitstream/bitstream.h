@@ -24,8 +24,8 @@ void bitstream_push_str(struct bit_stream* bs,
 
 void bitstream_push(
     struct bit_stream* bs, 
-    uint16_t target,      /* holder of the bits */
-    uint16_t bits         /* how many bits to write */
+    uint32_t target,      /* holder of the bits */
+    uint32_t bits         /* how many bits to write */
     );
 
 void bitstream_print(struct bit_stream* bs);

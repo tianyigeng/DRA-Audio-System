@@ -5,7 +5,7 @@
 #include "huffbook.h"
 
 struct tree_node {
-	int16_t val;
+	int32_t val;
 	unsigned char is_leaf;
 	struct tree_node* left;
 	struct tree_node* right;

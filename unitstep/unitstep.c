@@ -6,16 +6,16 @@
 
 static void _unit_step_helper(struct vector* in,    /* input vector */
                                 struct vector* out, /* output vector */
-                                uint16_t pos,       /* from which position to unitstep */
-                                uint16_t len,       /* how many samples to unitstep */
-                                uint16_t index      /* which index to use */
+                                uint32_t pos,       /* from which position to unitstep */
+                                uint32_t len,       /* how many samples to unitstep */
+                                uint32_t index      /* which index to use */
                                 );
 
 static void _inv_unit_step_helper(struct vector* in,    /* input vector */
                                     struct vector* out, /* output vector */
-                                    uint16_t pos,       /* from which position to unitstep */
-                                    uint16_t len,       /* how many samples to unitstep */
-                                    uint16_t index      /* which index to use */
+                                    uint32_t pos,       /* from which position to unitstep */
+                                    uint32_t len,       /* how many samples to unitstep */
+                                    uint32_t index      /* which index to use */
                                     );
 
 // in  --- vector of double
@@ -43,10 +43,10 @@ struct vector* inv_unit_step(struct vector* in) {
 // helper function for unit steping
 static void _unit_step_helper(struct vector* in, 
                                 struct vector* out, 
-                                uint16_t pos, 
-                                uint16_t len, 
-                                uint16_t index) {
-    for (uint16_t i = pos; i < pos + len; i++) {
+                                uint32_t pos, 
+                                uint32_t len, 
+                                uint32_t index) {
+    for (uint32_t i = pos; i < pos + len; i++) {
         vector_push_back_uint32(out, (int32_t) (vector_double_at(in, i) / STEP[index]));
     }
 }
@@ -54,10 +54,10 @@ static void _unit_step_helper(struct vector* in,
 // helper function for inv unit steping
 static void _inv_unit_step_helper(struct vector* in, 
                                     struct vector* out, 
-                                    uint16_t pos, 
-                                    uint16_t len, 
-                                    uint16_t index) {
-    for (uint16_t i = pos; i < pos + len; i++) {
+                                    uint32_t pos, 
+                                    uint32_t len, 
+                                    uint32_t index) {
+    for (uint32_t i = pos; i < pos + len; i++) {
         vector_push_back_double(out, (double) (vector_int32_at(in, i)) * STEP[index]);
     }
 }

@@ -43,12 +43,12 @@ int main(int argc, char** argv) {
     /* processing */
     struct vector* mdct = MDCT(test_data);
     message("After MDCT:");
-    for (uint16_t i = 0; i < mdct->size; i++) {
+    for (uint32_t i = 0; i < mdct->size; i++) {
         vector_print_double((struct vector*) vector_object_at(mdct, i));
     }
     
     struct vector* pre_imdct = vector_init();
-    for (uint16_t i = 0; i < mdct->size; i++) {
+    for (uint32_t i = 0; i < mdct->size; i++) {
         struct vector* tomdct = (struct vector*) vector_object_at(mdct, i);
         struct vector* stepped = unit_step(tomdct);
         message("After unit step:");
@@ -80,8 +80,8 @@ int main(int argc, char** argv) {
 
     /* dump data */
     FILE* fp_out = fopen(out_file, "w");
-    for (uint16_t i = 0; i < after_imdct->size; i++) {
-        fprintf(fp_out, "%.6f", vector_double_at(after_imdct, i));
+    for (uint32_t i = 0; i < after_imdct->size; i++) {
+        fprintf(fp_out, "%.6f\n", vector_double_at(after_imdct, i));
     }
     fclose(fp_out);
 

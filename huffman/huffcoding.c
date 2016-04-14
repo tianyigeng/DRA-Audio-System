@@ -60,7 +60,7 @@ static void _huff_decode_overflow(struct huff_codebook* book,
     struct tree_node* curr = root;
 
     const uint32_t len = bitstream_size(src);
-    const uint16_t max_book_indx = book->size - 1;
+    const uint32_t max_book_indx = book->size - 1;
 
     /*
      * note that we may encounter large indices, e.g.
@@ -105,7 +105,7 @@ static void _huff_decode_standard(struct huff_codebook* book,
     struct tree_node* curr = root;
 
     const uint32_t len = bitstream_size(src);
-    const uint16_t max_book_indx = book->size - 1;
+    const uint32_t max_book_indx = book->size - 1;
 
     /*
      * note that no overflow need to be considered here. 
@@ -130,19 +130,19 @@ static void _huff_decode_standard(struct huff_codebook* book,
 static void _huff_encode_overflow(struct huff_codebook* book, 
                                     struct vector* src, 
                                     struct bit_stream* result) {
-    uint16_t* temp_code = (uint16_t*) malloc(sizeof(uint16_t) * book->size);
-    uint16_t* temp_bits = (uint16_t*) malloc(sizeof(uint16_t) * book->size);
-    uint16_t cumulate_size = 0;
+    uint32_t* temp_code = (uint32_t*) malloc(sizeof(uint32_t) * book->size);
+    uint32_t* temp_bits = (uint32_t*) malloc(sizeof(uint32_t) * book->size);
+    uint32_t cumulate_size = 0;
 
     if (temp_bits == NULL || temp_code == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
         return;
     }
 
-    const uint16_t max_book_indx = book->size - 1;
+    const uint32_t max_book_indx = book->size - 1;
 
     /* set up library here */
-    for (uint16_t i = 0; i < book->size; i++) {
+    for (uint32_t i = 0; i < book->size; i++) {
         cumulate_size += book->bit_incr[i];
         temp_code[book->index[i]] = book->code[i];
         temp_bits[book->index[i]] = cumulate_size;
@@ -174,19 +174,19 @@ static void _huff_encode_overflow(struct huff_codebook* book,
 static void _huff_encode_standard(struct huff_codebook* book, 
                                     struct vector* src, 
                                     struct bit_stream* result) {
-    uint16_t* temp_code = (uint16_t*) malloc(sizeof(uint16_t) * book->size);
-    uint16_t* temp_bits = (uint16_t*) malloc(sizeof(uint16_t) * book->size);
-    uint16_t cumulate_size = 0;
+    uint32_t* temp_code = (uint32_t*) malloc(sizeof(uint32_t) * book->size);
+    uint32_t* temp_bits = (uint32_t*) malloc(sizeof(uint32_t) * book->size);
+    uint32_t cumulate_size = 0;
 
     if (temp_bits == NULL || temp_code == NULL) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
         return;
     }
 
-    const uint16_t max_book_indx = book->size - 1;
+    const uint32_t max_book_indx = book->size - 1;
 
     /* set up library here */
-    for (uint16_t i = 0; i < book->size; i++) {
+    for (uint32_t i = 0; i < book->size; i++) {
         cumulate_size += book->bit_incr[i];
         temp_code[book->index[i]] = book->code[i];
         temp_bits[book->index[i]] = cumulate_size;
