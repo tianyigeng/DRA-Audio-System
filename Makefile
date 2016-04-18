@@ -6,7 +6,7 @@ playafter:
 
 audioproc:
 	make dev
-	./dra audio/in.cm audio/out.pcm
+	./dra audio/in.pcm audio/out.pcm
 
 config:
 	python configure/config.py
@@ -134,4 +134,3 @@ testhuff: test_huff.o errors.o vector.o bitstream.o huffcoding.o hufftree.o huff
 	-@./testhuff
 	-@make clean
 	-@rm testhuff
-

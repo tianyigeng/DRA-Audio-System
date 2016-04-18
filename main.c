@@ -15,9 +15,20 @@ static inline void message(const char* in) {
     printf("%s\n", in);
 }
 
+static void usage() {
+    printf("Invalid arguments!\n");
+    printf("Usage:\n");
+    printf("dra <input pcm file> <output pcm file>\n");
+}
+
 int main(int argc, char** argv) {
-    const char* in_file = "audio/in.pcm";
-    const char* out_file = "audio/out.pcm";
+    if (argc != 3) {
+        usage();
+        handle_error(ERROR_INVALID_ARGV);
+    }
+
+    const char* in_file = argv[1];
+    const char* out_file = argv[2];
     
     /* read input data */
     struct vector* test_data = vector_init();
