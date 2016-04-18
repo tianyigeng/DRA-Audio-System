@@ -37,35 +37,39 @@ int main(int argc, char** argv) {
     free(buf);
     fclose(fp_in);
 
-    message("Original data:");
-    vector_print_double(test_data);
+    // message("Original data:");
+    // vector_print_double(test_data);
 
     /* processing */
     struct vector* mdct = MDCT(test_data);
-    message("After MDCT:");
-    for (uint32_t i = 0; i < mdct->size; i++) {
-        vector_print_double((struct vector*) vector_object_at(mdct, i));
-    }
+    // message("After MDCT:");
+    // for (uint32_t i = 0; i < mdct->size; i++) {
+    //     vector_print_double((struct vector*) vector_object_at(mdct, i));
+    // }
+
+    uint32_t total_size = 0;
     
     struct vector* pre_imdct = vector_init();
     for (uint32_t i = 0; i < mdct->size; i++) {
         struct vector* tomdct = (struct vector*) vector_object_at(mdct, i);
         struct vector* stepped = unit_step(tomdct);
-        message("After unit step:");
+        // message("After unit step:");
         // vector_print_int32(stepped);
 
         struct bit_stream* bs = bitstream_init();
         huff_encode(&HuffDec27_256x1, stepped, bs);
-        message("After huffman encode:");
+        // message("After huffman encode:");
         // bitstream_print(bs);
         
+        total_size += bitstream_size(bs);
+
         struct vector* dehuff = vector_init();
         huff_decode(&HuffDec27_256x1, bs, dehuff);
-        message("After huffman decode:");
+        // message("After huffman decode:");
         // vector_print_int32(dehuff);
 
         struct vector* destep = inv_unit_step(dehuff);
-        message("After inv unit step:");
+        // message("After inv unit step:");
         // vector_print_double(destep);
 
         vector_push_back_object(pre_imdct, (struct vector*) destep);
@@ -75,7 +79,7 @@ int main(int argc, char** argv) {
         bitstream_destroy(bs);
     }
 
-    message("After iMDCT:");
+    // message("After iMDCT:");
     struct vector* after_imdct = iMDCT(pre_imdct);
 
     /* dump data */
@@ -86,7 +90,9 @@ int main(int argc, char** argv) {
     fclose(fp_out);
 
     /* release memory */
-    message("Releasing memory...");
+    printf("Origianl Size: %d\n", test_data->size * 4 * 8);
+    printf("After Encode Length: %d\n", total_size);
+    // message("Releasing memory...");
     vector_destroy(mdct, free_func_2dvec);
 
     vector_destroy(pre_imdct, free_func_2dvec);
