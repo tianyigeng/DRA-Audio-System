@@ -74,6 +74,7 @@ testus: test_unitstep.o unitstep.o steps.o vector.o errors.o
 
 clean:
 	-@find . -name \*.o -print -o -name \*.out | xargs rm || true
+	-@rm dra
 
 count:
 	-@find . -name \*.h -print -o -name Makefile -print -o -name \*.c -print | xargs cat | wc -l

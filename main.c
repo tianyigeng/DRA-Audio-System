@@ -16,9 +16,10 @@ static inline void message(const char* in) {
 }
 
 static void usage() {
-    printf("Invalid arguments!\n");
+    printf("========================================\n");
     printf("Usage:\n");
-    printf("dra <input pcm file> <output pcm file>\n");
+    printf("\tdra <input pcm file> <output pcm file>\n");
+    printf("========================================\n");
 }
 
 int main(int argc, char** argv) {
