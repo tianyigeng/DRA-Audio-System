@@ -1,12 +1,16 @@
 playorig:
 	play audio/apple8000.wav 2> /dev/null 
 
+wav2pcm:
+	octave -q audio/wav2pcm.m apple8000.wav in.pcm
+
 playafter:
-	octave audio/testout.m
+	octave -q audio/testout.m
 
 audioproc:
 	make dev
 	./dra audio/in.pcm audio/out.pcm
+	rm dra || true
 
 config:
 	python configure/config.py
@@ -74,7 +78,7 @@ testus: test_unitstep.o unitstep.o steps.o vector.o errors.o
 
 clean:
 	-@find . -name \*.o -print -o -name \*.out | xargs rm || true
-	-@rm dra
+	-@rm dra 2> /dev/null || true
 
 count:
 	-@find . -name \*.h -print -o -name Makefile -print -o -name \*.c -print | xargs cat | wc -l
