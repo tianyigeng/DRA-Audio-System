@@ -7,6 +7,9 @@ wav2pcm:
 playafter:
 	octave -q audio/testout.m
 
+plotdiff:
+	octave -q audio/plotdiff.m in.pcm out.pcm 
+
 audioproc:
 	make dev
 	./dra audio/in.pcm audio/out.pcm
