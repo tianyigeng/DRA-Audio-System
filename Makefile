@@ -81,7 +81,10 @@ clean:
 	-@rm dra 2> /dev/null || true
 
 count:
-	-@find . -name \*.h -print -o -name Makefile -print -o -name \*.c -print | xargs cat | wc -l
+	-@find . -name \*.h -print -o \
+			 -name Makefile -print -o \
+			 -name \*.c -print -o\
+			 -name \*.m -print | xargs cat | wc -l
 
 test_all.o: test_all.c
 	gcc -c test_all.c \
