@@ -298,6 +298,35 @@ static void UnpackQIndex() {
     }
 }
 
+static void UnpackWinSequence() {
+    if (nCh == 0 || bUseJIC == FALSE && bUseSumDiff == FALSE) {
+        nWinTypeCurrent = Unpack(4);
+        if (nWinTypeCurrent != ANY_LONG_WIN) {
+            nNumCluster = Unpack(2) + 1;
+            if (nNumCluster >= 2) {
+                nLast = 0;
+                for (nCluster = 0; nCluster < nNumCluster - 1; nCluster++) {
+                    k = HuffDec(pClusterBook) + 1;
+                    anNumBlocksPerFrmPerCluster[nCluster] = k;
+                    nLast += k;
+                }
+                anNumBlocksPerFrmPerCluster[nCluster] = nNumBlocksPerFrm - nLast;
+            } else {
+                anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
+            }
+        } else {
+            nNumCluster = 1;
+            anNumBlocksPerFrmPerCluster[0] = 1;
+        }
+    } else {
+        nWinTypeCurrent = Ch0.nWinTypeCurrent;
+        nNumCluster = Ch0.nNumCluster;
+        for (n = 0; n < nNumCluster; n++) {
+            anNumBlocksPerFrmPerCluster[n] = Ch0.anNumBlocksPerFrmPerCluster[n];
+        }
+    }
+}
+
 static void AuxiliaryData() {
     /* Intentionally blank */
 }
