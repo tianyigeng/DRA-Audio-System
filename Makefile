@@ -13,7 +13,7 @@ plotdiff:
 audioproc:
 	make dev
 	./dra audio/in.pcm audio/out.pcm
-	rm dra || true
+	-@rm dra || true
 
 config:
 	python configure/config.py
