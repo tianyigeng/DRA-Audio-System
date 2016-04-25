@@ -2,6 +2,9 @@
 #define __DECODE_C_
 
 #include <stdint.h>
+#include <assert.h>
+#include "../bitstream/bitstream.h"
+#include "../bitstream/bs_iter.h"
 
 typedef int32_t   INT;
 typedef uint8_t   BOOL;
@@ -21,7 +24,7 @@ const INT WIN_LONG_BRIEF2SHORT  = 8;
 const INT WIN_SHORT_SHORT2SHORT = 9;
 const INT WIN_SHORT_SHORT2BRIEF = 10;
 const INT WIN_SHORT_BRIEF2BRIEF = 11;
-const INT WIN_SHORT_BRIEF2BRIEF = 12;
+const INT WIN_SHORT_BRIEF2SHORT = 12;
 
 /*
  *  Forward decls
@@ -46,8 +49,10 @@ static void     AuxiliaryData();
 
 #define MAX_BOOK 9
 
-/* configuration variables */
+/* an iterator of the input bitstream */
+struct bs_iter* iter;
 
+/* configuration variables */
 INT     nNumNormalCh, nNumLfeCh;
 BOOL    bUseSumDiff, bUseJIC;
 
@@ -55,6 +60,8 @@ INT     nNumBlocksPerFrm;
 INT     nFrmHeaderType;
 INT     nJicCb;
 INT     nNumWord;
+INT     nNumCodes;
+INT     nDim;
 INT     nSampleRateIndex;
 INT     nNumCluster;
 BOOL    bAuxData;
@@ -78,15 +85,14 @@ INT     mnHS[MAX_CLUSTER][MAX_BAND];                /* huffbook index at (nClust
 INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope at (nCluster, nBand) */
 INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
 
-/* Use global varibles to make logic clear. */
-struct bit_stream*   bs;
-
 /* decode the bitstream according to dra spec */
 void dra_decode(struct bit_stream* bs) {
     init(bs);
+
     while (Unpack(16) == 0x7FFF) {
         Frame();
     }
+    
     clear();
 }
 
@@ -123,14 +129,10 @@ static void Frame() {
         if (nNumBlocksPerFrm == 8) {
             nWinTypeCurrent = WIN_LONG_LONG2LONG;
             nNumCluster = 1;
-
-            anNumBlocksPerFrmPerCluster = (AINT) alloc_array(sizeof(INT), nNumCluster);
             anNumBlocksPerFrmPerCluster[0] = 1;
         } else {
             nWinTypeCurrent = WIN_SHORT_SHORT2SHORT;
             nNumCluster = 1;
-
-            anNumBlocksPerFrmPerCluster = (AINT) alloc_array(sizeof(INT), nNumCluster);
             anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
         }
 
@@ -336,9 +338,10 @@ static void UnpackQIndex() {
 }
 
 static void UnpackWinSequence() {
-    if (nCh == 0 || bUseJIC == FALSE && bUseSumDiff == FALSE) {
+    if (nCh == 0 || (bUseJIC == FALSE && bUseSumDiff == FALSE)) {
         nWinTypeCurrent = Unpack(4);
-        if (nWinTypeCurrent != ANY_LONG_WIN) {
+        if (nWinTypeCurrent > 8) {
+            /* if current window is a short window */
 
             assert(0); /* unused now */
 
@@ -355,12 +358,13 @@ static void UnpackWinSequence() {
                 anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
             }
         } else {
+            /* if current window is a long window */
             nNumCluster = 1;
             anNumBlocksPerFrmPerCluster[0] = 1;
         }
     } else {
         assert(0); /* unused now */
-        
+
         nWinTypeCurrent = Ch0.nWinTypeCurrent;
         nNumCluster = Ch0.nNumCluster;
         for (n = 0; n < nNumCluster; n++) {
@@ -385,16 +389,18 @@ static void UnpackBitPad() {
     /* Intentionally blank */
 }
 
-static uint32_t Unpack(uint32_t bits) {
-    return 0;
+static uint32_t Unpack(uint16_t bits) {
+    return bs_iter_unpack(iter, bits);
 }
 
 static void init(struct bit_stream* input_bs) {
-    bs = input_bs;
+    iter = bs_iter_init(input_bs);
 }
 
 static void clear() {
-    bs = NULL;
+    if (iter != NULL) {
+        bs_iter_destroy(iter);
+    }
 }
 
 #endif
