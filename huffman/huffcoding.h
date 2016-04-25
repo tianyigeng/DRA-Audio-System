@@ -14,4 +14,20 @@ void huff_encode(struct huff_codebook* book,
                     struct vector* src, 
                     struct bit_stream* result);
 
+void ResetHuffIndex(struct huff_codebook* book, int val);
+
+int32_t HuffDecDiff(struct huff_codebook* book);
+
+int32_t GetNumHuffCodes(struct huff_codebook* book);
+
+int32_t HuffDec(struct huff_codebook* book);
+
+int32_t GetHuffDim(struct huff_codebook* book);
+
+uint8_t GetHuffMidTread(struct huff_codebook* book);
+
+int32_t HuffDecRecursive(struct huff_codebook* book);
+
+int32_t HuffDecode(struct huff_codebook* book);
+
 #endif

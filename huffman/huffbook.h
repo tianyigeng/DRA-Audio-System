@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define MAX_BOOK    9
+
 struct huff_codebook {
     uint32_t size;
     const uint32_t* bit_incr;
@@ -12,5 +14,14 @@ struct huff_codebook {
 
 extern struct huff_codebook HuffDec1_7x1;
 extern struct huff_codebook HuffDec27_256x1;
+
+extern struct huff_codebook* pQuotientWidthBook;
+extern struct huff_codebook* pQIndexBook;
+extern struct huff_codebook* pQStepBook;
+extern struct huff_codebook* pClusterBook;
+extern struct huff_codebook* pRunLengthBook;
+extern struct huff_codebook* pHSBook;
+
+extern struct huff_codebook* QIndexBooks[];
 
 #endif

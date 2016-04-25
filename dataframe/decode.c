@@ -1,10 +1,13 @@
 #ifndef __DECODE_C_
 #define __DECODE_C_
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
 #include "../bitstream/bitstream.h"
 #include "../bitstream/bs_iter.h"
+#include "../huffman/huffbook.h"
+#include "../huffman/huffcoding.h"
 
 typedef int32_t   INT;
 typedef uint8_t   BOOL;
@@ -31,7 +34,7 @@ const INT WIN_SHORT_BRIEF2SHORT = 12;
  */
 static void     init(struct bit_stream* bs); /* set up essentials */
 static void     clear();                     /* release memory */
-static uint32_t Unpack(uint32_t bits);       /* unpack bits from bit_stream */
+static uint32_t Unpack(uint16_t bits);       /* unpack bits from bit_stream */
 static void     Frame();                     /* decode a frame */
 static void     FrameHeader();               /* decode frame header */
 static void     UnpackWinSequence();
@@ -43,11 +46,10 @@ static void     UnpackJicScale();
 static void     UnpackBitPad();
 static void     AuxiliaryData();
 
-#define MAX_INDEX 1024
+#define MAX_INDEX   1024
 #define MAX_CLUSTER 4
 #define MAX_BAND    32
 
-#define MAX_BOOK 9
 
 /* an iterator of the input bitstream */
 struct bs_iter* iter;
@@ -77,6 +79,7 @@ INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin,
 INT     anNumBlocksPerFrmPerCluster[MAX_CLUSTER];  /* num of blocks/frame in a cluster */
 INT     anHSNumBands[MAX_CLUSTER];                 /* num of bands in a cluster */
 INT     anClusterBin0[MAX_CLUSTER];                /* first index at every cluster */
+INT     anMaxActCb[MAX_CLUSTER];                   /*  */
 
 INT     anQIndex[MAX_INDEX];                       /* indices before inv-unitstep */
 
@@ -85,6 +88,8 @@ INT     mnHS[MAX_CLUSTER][MAX_BAND];                /* huffbook index at (nClust
 INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope at (nCluster, nBand) */
 INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
 
+INT     n;
+
 /* decode the bitstream according to dra spec */
 void dra_decode(struct bit_stream* bs) {
     init(bs);
@@ -92,7 +97,7 @@ void dra_decode(struct bit_stream* bs) {
     while (Unpack(16) == 0x7FFF) {
         Frame();
     }
-    
+
     clear();
 }
 
@@ -156,7 +161,9 @@ static void FrameHeader() {
     if (nFrmHeaderType == 0) {
         nNumWord = Unpack(10);
     } else {
+
         assert(0); /* unused now */
+
         nNumWord = Unpack(13);
     }
 
@@ -171,7 +178,9 @@ static void FrameHeader() {
         nNumNormalCh = Unpack(3) + 1;
         nNumLfeCh = Unpack(1);
     } else {
+
         assert(0); /* unused now */
+
         nNumNormalCh = Unpack(6) + 1;
         nNumLfeCh = Unpack(2);
     }
@@ -182,7 +191,9 @@ static void FrameHeader() {
     /* use sumdiff / use jic */
     if (nFrmHeaderType == 0) {
         if (nNumNormalCh > 1) {
+
             assert(0); /* unused now */
+
             bUseSumDiff = Unpack(1);
             bUseJIC = Unpack(1);
         } else {
@@ -191,7 +202,9 @@ static void FrameHeader() {
         }
 
         if (bUseJIC == 1) {
+
             assert(0); /* unused now */
+
             nJicCb = Unpack(5) + 1;
         } else {
             nJicCb = 0;
@@ -338,6 +351,11 @@ static void UnpackQIndex() {
 }
 
 static void UnpackWinSequence() {
+    /* record the state for further use */
+    static INT Ch0_nWinTypeCurrent;
+    static INT Ch0_nNumCluster;
+    static INT Ch0_anNumBlocksPerFrmPerCluster[MAX_CLUSTER];
+
     if (nCh == 0 || (bUseJIC == FALSE && bUseSumDiff == FALSE)) {
         nWinTypeCurrent = Unpack(4);
         if (nWinTypeCurrent > 8) {
@@ -362,13 +380,23 @@ static void UnpackWinSequence() {
             nNumCluster = 1;
             anNumBlocksPerFrmPerCluster[0] = 1;
         }
+
+        if (nCh == 0) {
+            /* copy the state information to static variables for further use */
+            Ch0_nWinTypeCurrent = nWinTypeCurrent;
+            Ch0_nNumCluster = nNumCluster;
+            for (n = 0; n < nNumCluster; n++) {
+                Ch0_anNumBlocksPerFrmPerCluster[n] = anNumBlocksPerFrmPerCluster[n];
+            }
+        }
     } else {
         assert(0); /* unused now */
 
-        nWinTypeCurrent = Ch0.nWinTypeCurrent;
-        nNumCluster = Ch0.nNumCluster;
+        /* copy the info of Ch0 */
+        nWinTypeCurrent = Ch0_nWinTypeCurrent;
+        nNumCluster = Ch0_nNumCluster;
         for (n = 0; n < nNumCluster; n++) {
-            anNumBlocksPerFrmPerCluster[n] = Ch0.anNumBlocksPerFrmPerCluster[n];
+            anNumBlocksPerFrmPerCluster[n] = Ch0_anNumBlocksPerFrmPerCluster[n];
         }
     }
 }
