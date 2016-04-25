@@ -4,16 +4,24 @@
 #include <stdint.h>
 
 typedef int32_t   INT;
-typedef int32_t*  AINT; /* int array */
-typedef int32_t** MINT; /* 2-d int array */
 typedef uint8_t   BOOL;
-typedef enum window {
-    WIN_LONG_LONG2LONG, 
-    WIN_SHORT_SHORT2SHORT
-} WINTYPE;
 
 const BOOL TRUE  = 1;
 const BOOL FALSE = 0;
+
+const INT WIN_LONG_LONG2LONG    = 0;
+const INT WIN_LONG_LONG2SHORT   = 1;
+const INT WIN_LONG_SHORT2LONG   = 2;
+const INT WIN_LONG_SHORT2SHORT  = 3;
+const INT WIN_LONG_LONG2BRIEF   = 4;
+const INT WIN_LONG_BRIEF2LONG   = 5;
+const INT WIN_LONG_BRIEF2BRIEF  = 6;
+const INT WIN_LONG_SHORT2BRIEF  = 7;
+const INT WIN_LONG_BRIEF2SHORT  = 8;
+const INT WIN_SHORT_SHORT2SHORT = 9;
+const INT WIN_SHORT_SHORT2BRIEF = 10;
+const INT WIN_SHORT_BRIEF2BRIEF = 11;
+const INT WIN_SHORT_BRIEF2BRIEF = 12;
 
 /*
  *  Forward decls
@@ -32,34 +40,45 @@ static void     UnpackJicScale();
 static void     UnpackBitPad();
 static void     AuxiliaryData();
 
-static AINT alloc_aint(uint32_t sz, uint32_t len);                 /* helper function to alloc arrays */
-static void free_aint(AINT arr);
-static MINT alloc_mint(uint32_t sz, uint32_t xlen, uint32_t ylen); /* helper function to alloc 2-d arrays */
-static void free_mint(MINT arr, uint32_t xlen);
+#define MAX_INDEX 1024
+#define MAX_CLUSTER 4
+#define MAX_BAND    32
 
-struct frame_config {
-    INT     nNumNormalCh;
-    INT     nNumLfeCh;
-    BOOL    bUseSumDiff;
-    BOOL    bUseJIC;
-    INT     nNumBlocksPerFrm;
-    INT     nFrmHeaderType;
-    INT     nJicCb;
-    INT     nNumWord;
-    INT     nSampleRateIndex;
-    INT     nNumCluster;
-    BOOL    bAuxData;
-    WINTYPE nWinTypeCurrent;
+#define MAX_BOOK 9
 
-    AINT    anNumBlocksPerFrmPerCluster;
-    AINT    anHSNumBands;
+/* configuration variables */
 
-    MINT    mnHS;
-    MINT    mnHSBandEdge;
-};
+INT     nNumNormalCh, nNumLfeCh;
+BOOL    bUseSumDiff, bUseJIC;
+
+INT     nNumBlocksPerFrm;
+INT     nFrmHeaderType;
+INT     nJicCb;
+INT     nNumWord;
+INT     nSampleRateIndex;
+INT     nNumCluster;
+BOOL    bAuxData;
+
+/* temp variables */
+INT     nWinTypeCurrent;
+
+INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin, 
+        nMaxIndex, nCtr, nQuotientWidth, nQIndex, nSign, 
+        nLast, nCh, k;
+
+/* one-dimentional arrays */
+INT     anNumBlocksPerFrmPerCluster[MAX_CLUSTER];  /* num of blocks/frame in a cluster */
+INT     anHSNumBands[MAX_CLUSTER];                 /* num of bands in a cluster */
+INT     anClusterBin0[MAX_CLUSTER];                /* first index at every cluster */
+
+INT     anQIndex[MAX_INDEX];                       /* indices before inv-unitstep */
+
+/* two-dimentional arrays */
+INT     mnHS[MAX_CLUSTER][MAX_BAND];                /* huffbook index at (nCluster, nBand) */
+INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope at (nCluster, nBand) */
+INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
 
 /* Use global varibles to make logic clear. */
-struct frame_config* config;
 struct bit_stream*   bs;
 
 /* decode the bitstream according to dra spec */
@@ -71,41 +90,48 @@ void dra_decode(struct bit_stream* bs) {
     clear();
 }
 
-static void Frame(struct bs_iter* bs) {
-    FrameHeader(bs);
-
-    INT nCh;
+static void Frame() {
+    /* Load frame headers and fill into configuration variables */
+    FrameHeader();
 
     /* Normal Frames */
-    for (nCh = 0; nCh < config->nNumNormalCh; nCh++) {
-        UnpackWinSequence(bs);
-        UnpackCodeBooks(bs);
-        UnpackQIndex(bs);
-        UnpackQStepIndex(bs);
+    for (nCh = 0; nCh < nNumNormalCh; nCh++) {
+        UnpackWinSequence();
+        UnpackCodeBooks();
+        UnpackQIndex();
+        UnpackQStepIndex();
     }
 
+    /* sum-diff-coding */
     if (bUseSumDiff == TRUE && (nCh % 2) == 1) {
-        UnpackSumDff(bs);
+        assert(0); /* unused now */
+
+        UnpackSumDff();
     }
 
+    /* joint-intensity-coding */
     if (bUseJIC == TRUE && nCh > 0) {
-        UnpackJicScale(bs);
+        assert(0); /* unused now */
+
+        UnpackJicScale();
     }
 
-    /* LFE Frames */
-    for (nCh = config->nNumNormalCh; nCh < config->nNumNormalCh + config->nNumLfeCh; nCh++) {
-        if (config->nNumBlocksPerFrm == 8) {
-            config->nWinTypeCurrent = WIN_LONG_LONG2LONG;
-            config->nNumCluster = 1;
+    /* LFE (low freq enhancement) Frames */
+    for (nCh = nNumNormalCh; nCh < nNumNormalCh + nNumLfeCh; nCh++) {
+        assert(0); /* unused now */
 
-            config->anNumBlocksPerFrmPerCluster = (AINT) alloc_array(sizeof(INT), config->nNumCluster);
-            config->anNumBlocksPerFrmPerCluster[0] = 1;
+        if (nNumBlocksPerFrm == 8) {
+            nWinTypeCurrent = WIN_LONG_LONG2LONG;
+            nNumCluster = 1;
+
+            anNumBlocksPerFrmPerCluster = (AINT) alloc_array(sizeof(INT), nNumCluster);
+            anNumBlocksPerFrmPerCluster[0] = 1;
         } else {
-            config->nWinTypeCurrent = WIN_SHORT_SHORT2SHORT;
-            config->nNumCluster = 1;
+            nWinTypeCurrent = WIN_SHORT_SHORT2SHORT;
+            nNumCluster = 1;
 
-            config->anNumBlocksPerFrmPerCluster = (AINT) alloc_array(sizeof(INT), config->nNumCluster);
-            config->anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
+            anNumBlocksPerFrmPerCluster = (AINT) alloc_array(sizeof(INT), nNumCluster);
+            anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
         }
 
         UnpackCodeBooks();
@@ -113,68 +139,74 @@ static void Frame(struct bs_iter* bs) {
         UnpackQStepIndex();
     }
 
+    /* bit pad */
     UnpackBitPad();
+
+    /* user defined axuiliary data */
     AuxiliaryData();
 }
 
 static void FrameHeader() {
     /* frame header type */
-    config->nFrmHeaderType = Unpack(1);
+    nFrmHeaderType = Unpack(1);
 
     /* num of words */
-    if (config->nFrmHeaderType == 0) {
-        config->nNumWord = Unpack(10);
+    if (nFrmHeaderType == 0) {
+        nNumWord = Unpack(10);
     } else {
-        config->nNumWord = Unpack(13);
+        assert(0); /* unused now */
+        nNumWord = Unpack(13);
     }
 
     /* blocks per frame */
-    config->nNumBlocksPerFrm = 1 << Unpack(2);
+    nNumBlocksPerFrm = 1 << Unpack(2);
 
     /* sample rate */
-    config->nSampleRateIndex = Unpack(4);
+    nSampleRateIndex = Unpack(4);
 
     /* num normal channel & lfe channel */
-    if (config->nFrmHeaderType == 0) {
-        config->nNumNormalCh = Unpack(3) + 1;
-        config->nNumLfeCh = Unpack(1);
+    if (nFrmHeaderType == 0) {
+        nNumNormalCh = Unpack(3) + 1;
+        nNumLfeCh = Unpack(1);
     } else {
-        config->nNumNormalCh = Unpack(6) + 1;
-        config->nNumLfeCh = Unpack(2);
+        assert(0); /* unused now */
+        nNumNormalCh = Unpack(6) + 1;
+        nNumLfeCh = Unpack(2);
     }
 
     /* aux data */
-    config->bAuxData = Unpack(1);
+    bAuxData = Unpack(1);
 
     /* use sumdiff / use jic */
-    if (config->nFrmHeaderType == 0) {
-        if (config->nNumNormalCh > 1) {
+    if (nFrmHeaderType == 0) {
+        if (nNumNormalCh > 1) {
+            assert(0); /* unused now */
             bUseSumDiff = Unpack(1);
             bUseJIC = Unpack(1);
         } else {
-            config->bUseSumDiff = 0;
-            config->bUseJIC = 0;
+            bUseSumDiff = 0;
+            bUseJIC = 0;
         }
+
         if (bUseJIC == 1) {
-            config->nJicCb = Unpack(5) + 1;
+            assert(0); /* unused now */
+            nJicCb = Unpack(5) + 1;
         } else {
-            config->nJicCb = 0;
+            nJicCb = 0;
         }
     } else {
-        config->bUseSumDiff = 0;
-        config->bUseJIC = 0;
-        config->nJicCb = 0;
+        assert(0); /* unused now */
+        bUseSumDiff = 0;
+        bUseJIC = 0;
+        nJicCb = 0;
     }
 }
 
 static void UnpackCodeBooks() {
-    INT nCluster;
-    INT nLast;
-    INT nBand;
-    INT k;
+    assert(nNumCluster == 1); /* unused now */
 
     /* unpack scope of books */
-    for (nCluster = 0; nCluster < config->nNumCluster; nCluster++) {
+    for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         anHSNumBands[nCluster] = Unpack(5);
         nLast = 0;
         for (nBand = 0; nBand < anHSNumBands[nCluster]; nBand++) {
@@ -185,7 +217,7 @@ static void UnpackCodeBooks() {
     }
 
     /* unpack indices of code book */
-    for (nCluster = 0; nCluster < config->nNumCluster; nCluster++) {
+    for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         if (anHSNumBands[nCluster] > 0) {
             nLast = Unpack(4);
             mnHS[nCluster][0] = nLast;
@@ -205,16 +237,21 @@ static void UnpackCodeBooks() {
 }
 
 static void UnpackQStepIndex() {
+    assert(nNumCluster == 1); /* unused now */
+
+    /* reset state */
     ResetHuffIndex(pQStepBook, 0);
-    INT nCluster, nBand;
-    for (nCluster = 0; nCluster < config->nNumCluster; nCluster++) {
-        for (nBand = 0; nBand < config->anMaxActCb[nCluster]; nBand++) {
-            config->mnQStepIndex[nCluster][nBand] = HuffDecDiff(pQStepBook);
+    for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
+        for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
+            mnQStepIndex[nCluster][nBand] = HuffDecDiff(pQStepBook);
         }
     }
 }
 
 static void UnpackQIndex() {
+    assert(nNumCluster == 1); /* unused now */
+
+    /* reset state */
     ResetHuffIndex(pQuotientWidthBook, 0);
 
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
@@ -302,6 +339,9 @@ static void UnpackWinSequence() {
     if (nCh == 0 || bUseJIC == FALSE && bUseSumDiff == FALSE) {
         nWinTypeCurrent = Unpack(4);
         if (nWinTypeCurrent != ANY_LONG_WIN) {
+
+            assert(0); /* unused now */
+
             nNumCluster = Unpack(2) + 1;
             if (nNumCluster >= 2) {
                 nLast = 0;
@@ -319,6 +359,8 @@ static void UnpackWinSequence() {
             anNumBlocksPerFrmPerCluster[0] = 1;
         }
     } else {
+        assert(0); /* unused now */
+        
         nWinTypeCurrent = Ch0.nWinTypeCurrent;
         nNumCluster = Ch0.nNumCluster;
         for (n = 0; n < nNumCluster; n++) {
@@ -348,59 +390,11 @@ static uint32_t Unpack(uint32_t bits) {
 }
 
 static void init(struct bit_stream* input_bs) {
-    config = (struct frame_config*) malloc(sizeof(struct frame_config));
-    if (config == NULL) {
-        handle_error(ERROR_FAILURE_ALLOC_MEM);
-        return;
-    }
     bs = input_bs;
-
-    /* init arrays */
-    config->anNumBlocksPerFrmPerCluster = NULL;
 }
 
 static void clear() {
     bs = NULL;
-
-    free_mint(config->mnHSBandEdge, config->nNumCluster);
-    free_mint(config->mnHS, config->nNumCluster);
-
-    free_aint(config->anNumBlocksPerFrmPerCluster);
-    free_aint(anHSNumBands);
-
-    free(config);
-}
-
-static AINT alloc_aint(uint32_t persize, uint32_t len) {
-    AINT ret = (AINT) malloc(size * len);
-    if (ret == NULL) {
-        handle_error(ERROR_FAILURE_ALLOC_MEM);
-        return NULL;
-    }
-    return ret;
-}
-
-static MINT alloc_mint(uint32_t persize, uint32_t xlen, uint32_t ylen) {
-    MINT ret = (MINT) malloc(sizeof(AINT) * xlen);
-    if (ret == NULL) {
-        handle_error(ERROR_FAILURE_ALLOC_MEM);
-        return NULL;
-    }
-    for (uint32_t i = 0; i < ylen; i++) {
-        ret[i] = alloc_aint(sizeof(INT), ylen);
-    }
-    return ret;
-}
-
-static void free_aint(AINT arr) {
-    free(arr);
-}
-
-static void free_mint(MINT arr, uint32_t xlen) {
-    for (uint32_t i = 0; i < xlen; i++) {
-        free(arr[i]);
-    }
-    free(arr);
 }
 
 #endif

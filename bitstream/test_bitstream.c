@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "bitstream.h"
+#include "bs_iter.h"
 
 int main() {
     struct bit_stream* bs = bitstream_init();
@@ -17,6 +18,21 @@ int main() {
     // }
     bitstream_push_str(bs, "10111011");
     bitstream_print(bs);
+
+    struct bs_iter* iter = bs_iter_init(bs);
+    printf("Unpack 4: %d\n", bs_iter_unpack(iter, 4));
+    printf("Unpack 4: %d\n", bs_iter_unpack(iter, 4));
+    printf("Unpack 4: %d\n", bs_iter_unpack(iter, 4));
+    printf("Unpack 4: %d\n", bs_iter_unpack(iter, 4));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
+    printf("Unpack 8: %d\n", bs_iter_unpack(iter, 8));
     
     bitstream_destroy(bs);
+    bs_iter_destroy(iter);
 }

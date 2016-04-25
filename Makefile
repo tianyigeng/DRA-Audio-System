@@ -29,6 +29,10 @@ main.o: main.c
 	gcc -c main.c \
 		-o main.o
 
+bs_iter.o: bitstream/bs_iter.c bitstream/bs_iter.h
+	gcc -c bitstream/bs_iter.c \
+		-o bs_iter.o
+
 bitstream.o: bitstream/bitstream.c bitstream/bitstream.h
 	gcc -c bitstream/bitstream.c \
 		-o bitstream.o
@@ -128,9 +132,9 @@ test_bitstream.o: bitstream/test_bitstream.c
 	gcc -c bitstream/test_bitstream.c \
 		-o test_bitstream.o
 
-testbs: test_bitstream.o errors.o vector.o bitstream.o
+testbs: test_bitstream.o errors.o vector.o bitstream.o bs_iter.o
 	gcc -o testbs \
-		test_bitstream.o errors.o vector.o bitstream.o
+		test_bitstream.o errors.o vector.o bitstream.o bs_iter.o
 	-@./testbs
 	-@make clean
 	-@rm testbs
