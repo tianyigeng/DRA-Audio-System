@@ -11,30 +11,33 @@
 
 typedef int32_t   INT;
 typedef uint8_t   BOOL;
+typedef double    DOUBLE;
 
 const BOOL TRUE  = 1;
 const BOOL FALSE = 0;
 
-const INT WIN_LONG_LONG2LONG    = 0;
-const INT WIN_LONG_LONG2SHORT   = 1;
-const INT WIN_LONG_SHORT2LONG   = 2;
-const INT WIN_LONG_SHORT2SHORT  = 3;
-const INT WIN_LONG_LONG2BRIEF   = 4;
-const INT WIN_LONG_BRIEF2LONG   = 5;
-const INT WIN_LONG_BRIEF2BRIEF  = 6;
-const INT WIN_LONG_SHORT2BRIEF  = 7;
-const INT WIN_LONG_BRIEF2SHORT  = 8;
-const INT WIN_SHORT_SHORT2SHORT = 9;
-const INT WIN_SHORT_SHORT2BRIEF = 10;
-const INT WIN_SHORT_BRIEF2BRIEF = 11;
-const INT WIN_SHORT_BRIEF2SHORT = 12;
+const INT WIN_LONG_LONG2LONG    = 0;   /* size: 2048 samples */
+const INT WIN_LONG_LONG2SHORT   = 1;   /* size: 2048 samples */
+const INT WIN_LONG_SHORT2LONG   = 2;   /* size: 2048 samples */
+const INT WIN_LONG_SHORT2SHORT  = 3;   /* size: 2048 samples */
+const INT WIN_LONG_LONG2BRIEF   = 4;   /* size: 2048 samples */
+const INT WIN_LONG_BRIEF2LONG   = 5;   /* size: 2048 samples */
+const INT WIN_LONG_BRIEF2BRIEF  = 6;   /* size: 2048 samples */
+const INT WIN_LONG_SHORT2BRIEF  = 7;   /* size: 2048 samples */
+const INT WIN_LONG_BRIEF2SHORT  = 8;   /* size: 2048 samples */
+const INT WIN_SHORT_SHORT2SHORT = 9;   /* size: 256 samples */
+const INT WIN_SHORT_SHORT2BRIEF = 10;  /* size: 256 samples */
+const INT WIN_SHORT_BRIEF2BRIEF = 11;  /* size: 256 samples */
+const INT WIN_SHORT_BRIEF2SHORT = 12;  /* size: 256 samples */
 
-/*
- *  Forward decls
- */
+/* Forward decls */
 static void     init(struct bit_stream* bs); /* set up essentials */
 static void     clear();                     /* release memory */
+
+static INT      Ceil(INT x, INT y);
+
 static uint32_t Unpack(uint16_t bits);       /* unpack bits from bit_stream */
+
 static void     Frame();                     /* decode a frame */
 static void     FrameHeader();               /* decode frame header */
 static void     UnpackWinSequence();
@@ -45,11 +48,13 @@ static void     UnpackSumDff();
 static void     UnpackJicScale();
 static void     UnpackBitPad();
 static void     AuxiliaryData();
+/* End of forward decls */
 
-#define MAX_INDEX   1024
-#define MAX_CLUSTER 4
-#define MAX_BAND    32
 
+#define MAX_INDEX   1024 /* max indices in a frame */
+#define MAX_CLUSTER 4    /* max clusters in a frame */
+#define MAX_BAND    32   /* max bands in a cluster */
+#define MAX_STEP    116  /* max step values for unit-step */
 
 /* an iterator of the input bitstream */
 struct bs_iter* iter;
@@ -73,7 +78,8 @@ INT     nWinTypeCurrent;
 
 INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin, 
         nMaxIndex, nCtr, nQuotientWidth, nQIndex, nSign, 
-        nLast, nCh, k;
+        nLast, nCh, k, n, nCb, nMaxBin, nMaxBand, 
+        nBin0, nNumBlocks, nStepSize, nQStepSelect;
 
 /* one-dimentional arrays */
 INT     anNumBlocksPerFrmPerCluster[MAX_CLUSTER];  /* num of blocks/frame in a cluster */
@@ -83,12 +89,18 @@ INT     anMaxActCb[MAX_CLUSTER];                   /*  */
 
 INT     anQIndex[MAX_INDEX];                       /* indices before inv-unitstep */
 
+
+DOUBLE  aunStepSize[MAX_STEP];                     /* store step sizes for unit step */
+DOUBLE  afBinReconst[MAX_INDEX];                   /* store recovered data (before imdct) */
+
+/* TODO: Accumulate that!!! */
+/* minimum nBand defined by Psychoacoustics model, 8kHz sample rate, long window */
+INT     pnCBEdge[MAX_BAND] = {26, 27, 27, 28, 30, 32, 34, 37, 41, 46, 53, 62, 74, 89, 109, 133, 162, 14};
+
 /* two-dimentional arrays */
 INT     mnHS[MAX_CLUSTER][MAX_BAND];                /* huffbook index at (nCluster, nBand) */
 INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope at (nCluster, nBand) */
 INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
-
-INT     n;
 
 /* decode the bitstream according to dra spec */
 void dra_decode(struct bit_stream* bs) {
@@ -105,7 +117,7 @@ static void Frame() {
     /* Load frame headers and fill into configuration variables */
     FrameHeader();
 
-    /* Normal Frames */
+    /* Normal channels */
     for (nCh = 0; nCh < nNumNormalCh; nCh++) {
         UnpackWinSequence();
         UnpackCodeBooks();
@@ -127,7 +139,7 @@ static void Frame() {
         UnpackJicScale();
     }
 
-    /* LFE (low freq enhancement) Frames */
+    /* LFE (low freq enhancement) channels */
     for (nCh = nNumNormalCh; nCh < nNumNormalCh + nNumLfeCh; nCh++) {
         assert(0); /* unused now */
 
@@ -225,7 +237,7 @@ static void UnpackCodeBooks() {
         anHSNumBands[nCluster] = Unpack(5);
         nLast = 0;
         for (nBand = 0; nBand < anHSNumBands[nCluster]; nBand++) {
-            k = HuffDecRecursive(pRunLengthBook) + nLast + 1;
+            k = HuffDecRecursive(pRunLengthBook) + nLast + 1; /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
             mnHSBandEdge[nCluster][nBand] = k;
             nLast = k;
         }
@@ -237,7 +249,7 @@ static void UnpackCodeBooks() {
             nLast = Unpack(4);
             mnHS[nCluster][0] = nLast;
             for (nBand = 1; nBand < anHSNumBands[nCluster]; nBand++) {
-                k = HuffDecode(pHSBook);
+                k = HuffDecode(pHSBook); /* pHSBook = HuffDec4_18x1 / HuffDec5_18x1 */
                 if (k > 8) {
                     k -= 8;
                 } else {
@@ -264,7 +276,7 @@ static void UnpackQStepIndex() {
 }
 
 static void UnpackQIndex() {
-    assert(nNumCluster == 1); /* unused now */
+    assert(nNumCluster == 1);
 
     /* reset state */
     ResetHuffIndex(pQuotientWidthBook, 0);
@@ -399,6 +411,48 @@ static void UnpackWinSequence() {
             anNumBlocksPerFrmPerCluster[n] = Ch0_anNumBlocksPerFrmPerCluster[n];
         }
     }
+}
+
+static void ReconstructQuantUnit() {
+    for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
+        nMaxBand = anHSNumBands[nCluster];
+        nMaxBin = mnHSBandEdge[nCluster][nMaxBand - 1] * 4;
+        nMaxBin = Ceil(nMaxBin, anNumBlocksPerFrmPerCluster[nCluster]);
+        nCb = 0;
+        while (pnCBEdge[nCb + 1] < nMaxBin) {
+            nCb++;
+        }
+        anMaxActCb[nCluster] = nCb;
+    }
+}
+
+static void InverseQuant() {
+    for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
+        nBin0 = anClusterBin0[nCluster];
+        for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
+            nNumBlocks = anNumBlocksPerFrmPerCluster[nCluster];
+            nStart = nBin0 + nNumBlocks * pnCBEdge[nBand];
+            nEnd = nBin0 + nNumBlocks * pnCBEdge[nBand + 1];
+            nQStepSelect = mnQStepIndex[nCluster][nBand];
+            nStepSize = aunStepSize[nQStepSelect];
+            for (nBin = nStart; nBin < nEnd; nBin++) {
+                afBinReconst[nBin] = anQIndex[nBin] * nStepSize;
+            }
+        }
+    }
+}
+
+static INT Ceil(INT x, INT y) {
+    // return the min t where t >= x/y
+    if (y == 0) {
+        handle_error(ERROR_INVALID_ARGV);
+        return -1;
+    }
+    
+    if (x % y == 0) {
+        return x / y;
+    }
+    return x / y + 1;
 }
 
 static void AuxiliaryData() {
