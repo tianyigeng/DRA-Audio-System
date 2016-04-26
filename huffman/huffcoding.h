@@ -16,7 +16,7 @@ void huff_encode(struct huff_codebook* book,
                     struct vector* src, 
                     struct bit_stream* result);
 
-void ResetHuffIndex(struct huff_codebook* book, int val);
+void ResetHuffIndex(struct huff_codebook* book, int32_t val);
 
 int32_t HuffDecDiff(struct huff_codebook* book, struct bs_iter* iter);
 int32_t HuffDec(struct huff_codebook* book, struct bs_iter* iter);

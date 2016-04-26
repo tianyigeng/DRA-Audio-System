@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include "huffcoding.h"
 
-void ResetHuffIndex(struct huff_codebook* book, int val);
+void ResetHuffIndex(struct huff_codebook* book, int32_t val) {
+    book->nIndex = val;
+}
 
 int32_t HuffDec(struct huff_codebook* book, struct bs_iter* iter) {
     /* a tree to help decoding */
@@ -35,7 +37,11 @@ int32_t HuffDec(struct huff_codebook* book, struct bs_iter* iter) {
     return -1;
 }
 
-int32_t HuffDecDiff(struct huff_codebook* book, struct bs_iter* iter);
+int32_t HuffDecDiff(struct huff_codebook* book, struct bs_iter* iter) {
+    int32_t nDiff = HuffDec(book, iter);
+    book->nIndex = (book->nIndex + nDiff) % book->size;
+    return book->nIndex;
+}
 
 int32_t HuffDecRecursive(struct huff_codebook* book, struct bs_iter* iter) {
     int32_t k = -1;
@@ -72,7 +78,10 @@ void HuffEnc(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
     free(temp_bits);
 }
 
-void HuffEncDiff(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
+void HuffEncDiff(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
+    HuffEnc(book, bs, (val + book->size - book->nIndex) % book->size);
+    book->nIndex = val;
+}
 
 void HuffEncRecursive(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
     int32_t nNumCodes = book->size;

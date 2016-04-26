@@ -13,6 +13,8 @@ struct huff_codebook {
     const uint32_t* bit_incr;
     const uint32_t* code;
     const uint32_t* index;
+
+    uint32_t nIndex; /* state variable, used by HuffEncDiff/HuffDecDiff, reset by ResetHuffIndex */
 };
 
 extern struct huff_codebook HuffDec1_7x1;

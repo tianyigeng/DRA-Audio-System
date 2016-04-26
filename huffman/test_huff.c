@@ -73,4 +73,30 @@ int main() {
 
         bitstream_destroy(bs);
     }
+
+    {
+        printf("Test Case 4:\n");
+        struct bit_stream* bs = bitstream_init();
+        ResetHuffIndex(&HuffDec27_256x1, 0);
+
+        HuffEncDiff(&HuffDec27_256x1, bs, 140);
+        HuffEncDiff(&HuffDec27_256x1, bs, 20);
+        HuffEncDiff(&HuffDec27_256x1, bs, 222);
+        HuffEncDiff(&HuffDec27_256x1, bs, 150);
+        HuffEncDiff(&HuffDec27_256x1, bs, 124);
+
+        bitstream_print(bs);
+        
+        
+        struct bs_iter* iter = bs_iter_init(bs);
+        ResetHuffIndex(&HuffDec27_256x1, 0);
+
+        printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
+
+        bitstream_destroy(bs);
+    }
 }
