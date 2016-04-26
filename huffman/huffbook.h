@@ -6,6 +6,8 @@
 #define MAX_BOOK    9
 
 struct huff_codebook {
+    uint32_t dim;
+    uint32_t num_codes;
     uint32_t size;
     const uint32_t* bit_incr;
     const uint32_t* code;
@@ -22,6 +24,15 @@ extern struct huff_codebook* pClusterBook;
 extern struct huff_codebook* pRunLengthBook;
 extern struct huff_codebook* pHSBook;
 
-extern struct huff_codebook* QIndexBooks[];
+extern struct huff_codebook* QIndexBooks[MAX_BOOK]; /* shoule either be StableBooks or TransientBooks */
+
+extern struct huff_codebook* StableBooks   [MAX_BOOK];
+extern struct huff_codebook* TransientBooks[MAX_BOOK];
+
+int32_t GetHuffDim(struct huff_codebook* book);
+
+uint8_t GetHuffMidTread(struct huff_codebook* book);
+
+int32_t GetNumHuffCodes(struct huff_codebook* book);
 
 #endif

@@ -204,7 +204,7 @@ static void UnpackCodeBooks() {
         anHSNumBands[nCluster] = Unpack(5);
         nLast = 0;
         for (nBand = 0; nBand < anHSNumBands[nCluster]; nBand++) {
-            k = HuffDecRecursive(pRunLengthBook) + nLast + 1; /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
+            k = HuffDecRecursive(pRunLengthBook, iter) + nLast + 1; /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
             mnHSBandEdge[nCluster][nBand] = k;
             nLast = k;
         }
@@ -216,7 +216,7 @@ static void UnpackCodeBooks() {
             nLast = Unpack(4);
             mnHS[nCluster][0] = nLast;
             for (nBand = 1; nBand < anHSNumBands[nCluster]; nBand++) {
-                k = HuffDecode(pHSBook); /* pHSBook = HuffDec4_18x1 / HuffDec5_18x1 */
+                k = HuffDec(pHSBook, iter); /* pHSBook = HuffDec4_18x1 / HuffDec5_18x1 */
                 if (k > 8) {
                     k -= 8;
                 } else {
@@ -237,7 +237,7 @@ static void UnpackQStepIndex() {
     ResetHuffIndex(pQStepBook, 0);
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
-            mnQStepIndex[nCluster][nBand] = HuffDecDiff(pQStepBook);
+            mnQStepIndex[nCluster][nBand] = HuffDecDiff(pQStepBook, iter);
         }
     }
 }
@@ -268,19 +268,19 @@ static void UnpackQIndex() {
                     nMaxIndex = GetNumHuffCodes(pQIndexBook) - 1;
                     nCtr = 0;
                     for (nBin = nStart; nBin < nEnd; nBin++) {
-                        nQIndex = HuffDec(pQIndexBook);
+                        nQIndex = HuffDec(pQIndexBook, iter);
                         if (nQIndex == nMaxIndex) {
                             nCtr++;
                         }
                         anQIndex[nBin] = nQIndex;
                     }
                     if (nCtr > 0) {
-                        nQuotientWidth = HuffDecDiff(pQuotientWidthBook) + 1;
+                        nQuotientWidth = HuffDecDiff(pQuotientWidthBook, iter) + 1;
                         for (nBin = nStart; nBin < nEnd; nBin++) {
                             nQIndex = anQIndex[nBin];
                             if (nQIndex == nMaxIndex) {
                                 nQIndex *= Unpack(nQuotientWidth) + 1;
-                                nQIndex += HuffDec(pQIndexBook);
+                                nQIndex += HuffDec(pQIndexBook, iter);
                                 anQIndex[nBin] = nQIndex;
                             }
                         }
@@ -291,7 +291,7 @@ static void UnpackQIndex() {
                     if (nDim > 1) {
                         nNumCodes = GetNumHuffCodes(pQIndexBook);
                         for (nBin = nStart; nBin < nEnd; nBin += nDim) {
-                            nQIndex = HuffDec(pQIndexBook);
+                            nQIndex = HuffDec(pQIndexBook, iter);
                             for (k = 0; k < nDim; k++) {
                                 anQIndex[nBin + k] = nQIndex % nNumCodes;
                                 nQIndex = nQIndex / nNumCodes;
@@ -299,7 +299,7 @@ static void UnpackQIndex() {
                         }
                     } else {
                         for (nBin = nStart; nBin < nEnd; nBin++) {
-                            anQIndex[nBin] = HuffDec(pQIndexBook);
+                            anQIndex[nBin] = HuffDec(pQIndexBook, iter);
                         }
                     }
                 }
@@ -346,7 +346,7 @@ static void UnpackWinSequence() {
             if (nNumCluster >= 2) {
                 nLast = 0;
                 for (nCluster = 0; nCluster < nNumCluster - 1; nCluster++) {
-                    k = HuffDec(pClusterBook) + 1;
+                    k = HuffDec(pClusterBook, iter) + 1;
                     anNumBlocksPerFrmPerCluster[nCluster] = k;
                     nLast += k;
                 }

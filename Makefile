@@ -41,6 +41,14 @@ mdct.o: mdct/mdct.h mdct/mdct.c
 	gcc -c mdct/mdct.c \
 		-o mdct.o
 
+encode.o: dataframe/dataframe.h dataframe/encode.c
+	gcc -c dataframe/encode.c\
+		-o encode.o
+
+decode.o: dataframe/dataframe.h dataframe/decode.c
+	gcc -c dataframe/decode.c\
+		-o decode.o
+
 fastmdct.o: mdct/fastmdct/mdct_fft.c mdct/fastmdct/mdct_fft.h
 	gcc -c mdct/fastmdct/mdct_fft.c \
 		-o fastmdct.o
