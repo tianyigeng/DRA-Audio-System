@@ -2,9 +2,9 @@
 #define __ENCODE_C_
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "../bitstream/bitstream.h"
 #include "../huffman/huffbook.h"
 #include "../huffman/huffcoding.h"
 #include "dataframe.h"
@@ -56,12 +56,16 @@ INT     nDim;
 INT     nNumCluster;
 
 /* temp variables */
+struct huff_codebook* pQIndexBook;
+
 INT     nWinTypeCurrent;
 
 INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin, 
         nMaxIndex, nCtr, nQuotientWidth, nQIndex, nSign, 
         nLast, nCh, k, n, nCb, nMaxBin, nMaxBand, 
-        nBin0, nNumBlocks, nStepSize, nQStepSelect;
+        nBin0, nNumBlocks, nQStepSelect;
+
+DOUBLE  nStepSize;
 
 /* one-dimentional arrays */
 INT     anNumBlocksPerFrmPerCluster[MAX_CLUSTER];  /* num of blocks/PackFrame in a cluster */
@@ -88,6 +92,9 @@ void dra_encode(struct vector* after_mdct, struct bit_stream* bs) {
             afFreqVals[j] = vector_double_at(frame_to_enc, j);
         }
         PackFrame();
+        // bitstream_print(bs);
+        printf("exitting..\n");
+        return;
     }
 
     clear();
@@ -95,7 +102,7 @@ void dra_encode(struct vector* after_mdct, struct bit_stream* bs) {
 
 static void SetUpConfig() {
     nFrmHeaderType   = 0;   /* standard frame */
-    // nNumWord = ;
+    nNumWord         = 200;
     nNumBlocksPerFrm = 1;   /* 1 blocks/frame (stable frame) */
     nSampleRateIndex = 0;   /* sample rate @ 8000Hz */
     nNumNormalCh     = 1;   /* 1 normal channels */
@@ -113,6 +120,7 @@ static void SetUpConfig() {
 
     anHSNumBands[0]    = 1;       /* 1 band */
     mnHSBandEdge[0][0] = 256;     /* size of band is 256 * 4 = 1024 */
+    mnHS[0][0]         = 9;       /* temporily use the largest codebook */
 
     anNumBlocksPerFrmPerCluster[0] = 1;    /* 1 block/frame in the cluster */
 
@@ -120,12 +128,30 @@ static void SetUpConfig() {
 
     ConstructQuantUnit();
     Quantilize();
+
+    for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
+        for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
+            mnQStepIndex[nCluster][nBand] = 95;
+        }
+    }
+
+    // printf("Indices before quant: \n");
+    // for (nBin = 0; nBin < MAX_INDEX; nBin++) {
+    //     printf("%.2f ", afFreqVals[nBin]);
+    // }
+    printf("Indices after quant: \n");
+    for (nBin = 0; nBin < MAX_INDEX; nBin++) {
+        printf("%d ", anQIndex[nBin]);
+    }
 }
 
 static void PackFrame() {
 
     /* First, set up configuration variables */
     SetUpConfig();
+
+    /* Pack nSyncWord */
+    Pack(16, nSyncWord);
 
     /* Pack Frame Headers */
     PackFrameHeader();
@@ -233,6 +259,7 @@ static void PackFrameHeader() {
 }
 
 static void PackCodeBooks() {
+    printf("packing code books...\n");
     assert(nNumCluster == 1); /* unsupported now */
 
     /* pack scope of books */
@@ -264,6 +291,7 @@ static void PackCodeBooks() {
 }
 
 static void PackQStepIndex() {
+    printf("packing QStepIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
@@ -278,6 +306,7 @@ static void PackQStepIndex() {
 }
 
 static void PackQIndex() {
+    printf("packing QIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
@@ -297,9 +326,11 @@ static void PackQIndex() {
             } else {
                 /* decode with selected code book */
                 nHSelect--;
+                printf("selecting book %d\n", nHSelect);
                 pQIndexBook = QIndexBooks[nHSelect];
 
                 if (nHSelect == 8) {
+                    printf("successfully selected book");
                     /* the largest code book, handle overflow */
                     nMaxIndex = GetNumHuffCodes(pQIndexBook) - 1;
 
@@ -308,6 +339,7 @@ static void PackQIndex() {
                     nQuotientWidth = 0; /* maximum quotient width, used by subsequent code. */
 
                     for (nBin = nStart; nBin < nEnd; nBin++) {
+                        // printf("working on sample %d\n", nBin);
                         if (abs(anQIndex[nBin]) >= nMaxIndex) {
                             /* overflow occurs */
                             nQuotientWidth = Max(nQuotientWidth, log2(abs(anQIndex[nBin]) / nMaxIndex));
@@ -377,6 +409,7 @@ static void PackQIndex() {
 }
 
 static void PackWinSequence() {
+    printf("packing WinSeq...\n");
     /* we only pack the info for the first channel, all others shall be the same */
 
     Pack(4, nWinTypeCurrent);
@@ -401,7 +434,7 @@ static void ConstructQuantUnit() {
         nMaxBin = mnHSBandEdge[nCluster][nMaxBand - 1] * 4;
         nMaxBin = Ceil(nMaxBin, anNumBlocksPerFrmPerCluster[nCluster]);
         nCb = 0;
-        while (pnCBEdge[nCb + 1] < nMaxBin) {
+        while (pnCBEdge[nCb] < nMaxBin) {
             nCb++;
         }
         anMaxActCb[nCluster] = nCb;
@@ -418,6 +451,7 @@ static void Quantilize() {
             nQStepSelect = mnQStepIndex[nCluster][nBand];
             nStepSize = aunStepSize[nQStepSelect];
             for (nBin = nStart; nBin < nEnd; nBin++) {
+                printf("%d, %.6f\n", nBin, nStepSize);
                 anQIndex[nBin] = afFreqVals[nBin] / nStepSize;
             }
         }

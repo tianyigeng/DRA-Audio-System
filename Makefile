@@ -42,12 +42,16 @@ mdct.o: mdct/mdct.h mdct/mdct.c
 		-o mdct.o
 
 encode.o: dataframe/dataframe.h dataframe/encode.c
-	gcc -c dataframe/encode.c\
+	gcc -c dataframe/encode.c \
 		-o encode.o
 
 decode.o: dataframe/dataframe.h dataframe/decode.c
-	gcc -c dataframe/decode.c\
+	gcc -c dataframe/decode.c \
 		-o decode.o
+
+dataframe.o: dataframe/dataframe.h dataframe/dataframe.c
+	gcc -c dataframe/dataframe.c \
+		-o dataframe.o
 
 fastmdct.o: mdct/fastmdct/mdct_fft.c mdct/fastmdct/mdct_fft.h
 	gcc -c mdct/fastmdct/mdct_fft.c \
@@ -105,11 +109,11 @@ test_all.o: test_all.c
 	gcc -c test_all.c \
 		-o test_all.o
 
-testall: test_all.o bitstream.o steps.o errors.o vector.o unitstep.o huffbook.o huffcoding.o hufftree.o mdct.o fastmdct.o
+testall: test_all.o encode.o decode.o bs_iter.o bitstream.o steps.o errors.o vector.o unitstep.o huffbook.o huffcoding.o hufftree.o mdct.o fastmdct.o dataframe.o
 	gcc -o testall \
 	test_all.o bitstream.o steps.o errors.o vector.o \
 	unitstep.o huffbook.o huffcoding.o hufftree.o \
-	mdct.o fastmdct.o -lfftw3
+	mdct.o fastmdct.o dataframe.o bs_iter.o encode.o decode.o -lfftw3
 	-@./testall
 	-@make clean
 	-@rm testall

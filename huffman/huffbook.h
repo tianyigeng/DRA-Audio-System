@@ -2,6 +2,7 @@
 #define __HUFFBOOK_H_
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #define MAX_BOOK    9
 
@@ -20,17 +21,13 @@ struct huff_codebook {
 extern struct huff_codebook HuffDec1_7x1;
 extern struct huff_codebook HuffDec27_256x1;
 
-extern struct huff_codebook* pQuotientWidthBook;
-extern struct huff_codebook* pQIndexBook;
-extern struct huff_codebook* pQStepBook;
-extern struct huff_codebook* pClusterBook;
-extern struct huff_codebook* pRunLengthBook;
-extern struct huff_codebook* pHSBook;
+extern struct huff_codebook* pQuotientWidthBook;    /* pQuotientWidthBook = HuffDec8_16x1 or HuffDec9_16x1 */
+extern struct huff_codebook* pQStepBook;            /* pQStepBook = HuffDec6_116x1 or HuffDec7_116x1 */
+extern struct huff_codebook* pClusterBook;          /* pClusterBook = HuffDec1_7x1 */
+extern struct huff_codebook* pRunLengthBook;        /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
+extern struct huff_codebook* pHSBook;               /* pHSBook = HuffDec4_18x1 or HuffDec5_18x1 */
 
 extern struct huff_codebook* QIndexBooks[MAX_BOOK]; /* shoule either be StableBooks or TransientBooks */
-
-extern struct huff_codebook* StableBooks   [MAX_BOOK];
-extern struct huff_codebook* TransientBooks[MAX_BOOK];
 
 int32_t GetHuffDim(struct huff_codebook* book);
 

@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include "../bitstream/bitstream.h"
-#include "../bitstream/bs_iter.h"
 #include "../huffman/huffbook.h"
 #include "../huffman/huffcoding.h"
 #include "dataframe.h"
@@ -47,6 +45,7 @@ INT     nNumCluster;
 BOOL    bAuxData;
 
 /* temp variables */
+struct huff_codebook* pQIndexBook;
 INT     nWinTypeCurrent;
 
 INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin, 
@@ -75,6 +74,9 @@ void dra_decode(struct bit_stream* bs) {
 
     while (Unpack(16) == nSyncWord) {
         Frame();
+        for (int i = 0; i < MAX_INDEX; i++) {
+            printf("%d ", anQIndex[i]);
+        }
     }
 
     clear();
@@ -133,6 +135,7 @@ static void Frame() {
 }
 
 static void FrameHeader() {
+    printf("unpacking frame header...\n");
     /* frame header type */
     nFrmHeaderType = Unpack(1);
 
@@ -194,9 +197,19 @@ static void FrameHeader() {
         bUseJIC = 0;
         nJicCb = 0;
     }
+    printf("nFrmHeaderType: %d\n", nFrmHeaderType);
+    printf("nNumWord: %d\n", nNumWord);
+    printf("nNumBlocksPerFrm: %d\n", nNumBlocksPerFrm);
+    printf("nSampleRateIndex: %d\n", nSampleRateIndex);
+    printf("nNumNormalCh: %d\n", nNumNormalCh);
+    printf("nNumLfeCh: %d\n", nNumLfeCh);
+    printf("bUseSumDiff: %d\n", bUseSumDiff);
+    printf("bUseJIC: %d\n", bUseJIC);
+    printf("nJicCb: %d\n", nJicCb);
 }
 
 static void UnpackCodeBooks() {
+    printf("unpacking codebooks...\n");
     assert(nNumCluster == 1); /* unsupported now */
 
     /* unpack scope of books */
@@ -209,6 +222,8 @@ static void UnpackCodeBooks() {
             nLast = k;
         }
     }
+    printf("anHSNumBands[0]: %d\n", anHSNumBands[0]);
+    printf("mnHSBandEdge[0][0]: %d\n", mnHSBandEdge[0][0]);
 
     /* unpack indices of code book */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
@@ -228,9 +243,11 @@ static void UnpackCodeBooks() {
             }
         }
     }
+    printf("mnHS[0][0]: %d\n", mnHS[0][0]);
 }
 
 static void UnpackQStepIndex() {
+    printf("unpacking QStepIndex...\n");
     assert(nNumCluster == 1); /* unsupported now */
 
     /* reset state */
@@ -243,6 +260,7 @@ static void UnpackQStepIndex() {
 }
 
 static void UnpackQIndex() {
+    printf("unpacking QIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */

@@ -26,6 +26,14 @@ def main():
                         .format(name, _id, (int)(dim), (int)((int)(total)**(1.0/(float)(dim))), i + 1)
             print "\n"
     print """
+struct huff_codebook* pQuotientWidthBook = &HuffDec8_16x1;
+struct huff_codebook* pQStepBook         = &HuffDec6_116x1;
+struct huff_codebook* pClusterBook       = &HuffDec1_7x1;
+struct huff_codebook* pRunLengthBook     = &HuffDec2_64x1;
+struct huff_codebook* pHSBook            = &HuffDec4_18x1;
+
+struct huff_codebook* QIndexBooks[MAX_BOOK] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &HuffDec27_256x1};
+
 int32_t GetHuffDim(struct huff_codebook* book) {
     return book->dim;
 }
