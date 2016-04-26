@@ -14,7 +14,9 @@ static void     init(struct bit_stream* bs);  /* set up essentials */
 static void     clear();                      /* release memory */
 
 static void     SetUpConfig();                /* set up configuration variables with the input frame */
-static INT      Ceil(INT x, INT y);
+
+static inline INT   Ceil(INT x, INT y);
+static inline INT   Max(INT x, INT y);
 
 static void     Pack(uint16_t bits, INT val); /* pack bits into bit_stream */
 
@@ -288,75 +290,86 @@ static void PackQIndex() {
             nHSelect = mnHS[nCluster][nBand];
 
             if (nHSelect == 0) {
-                /* pad with zero */
-                for (nBin = nStart; nBin < nEnd; nBin++) {
-                    anQIndex[nBin] = 0;
-                }
+                /* no need to put anything into the bitstream, pad with zero */
+
+                continue; /* go to next nBand */
+
             } else {
                 /* decode with selected code book */
                 nHSelect--;
                 pQIndexBook = QIndexBooks[nHSelect];
+
                 if (nHSelect == 8) {
-                    /* the largest code book */
+                    /* the largest code book, handle overflow */
                     nMaxIndex = GetNumHuffCodes(pQIndexBook) - 1;
-                    nCtr = 0;
+
+                    nCtr = 0; /* record occurance of overflow */
+
+                    nQuotientWidth = 0; /* maximum quotient width, used by subsequent code. */
+
                     for (nBin = nStart; nBin < nEnd; nBin++) {
-                        nQIndex = HuffDec(pQIndexBook);
-                        if (nQIndex == nMaxIndex) {
+                        if (abs(anQIndex[nBin]) >= nMaxIndex) {
+                            /* overflow occurs */
+                            nQuotientWidth = Max(nQuotientWidth, log2(abs(anQIndex[nBin]) / nMaxIndex));
                             nCtr++;
+                            HuffEnc(pQIndexBook, bs, nMaxIndex);
+                        } else {
+                            HuffEnc(pQIndexBook, bs, abs(anQIndex[nBin]));
                         }
-                        anQIndex[nBin] = nQIndex;
                     }
+
+                    /* if some sort of overflow occurs, hanle that */
                     if (nCtr > 0) {
-                        nQuotientWidth = HuffDecDiff(pQuotientWidthBook) + 1;
+                        HuffEncDiff(pQuotientWidthBook, bs, nQuotientWidth - 1);
                         for (nBin = nStart; nBin < nEnd; nBin++) {
-                            nQIndex = anQIndex[nBin];
-                            if (nQIndex == nMaxIndex) {
-                                Pack(nQuotientWidth, 0xff);
-                                nQIndex *= 1 + 1;
-                                nQIndex += HuffDec(pQIndexBook);
-                                anQIndex[nBin] = nQIndex;
+                            if (abs(anQIndex[nBin]) >= nMaxIndex) {
+                                /* overflow happened here */
+                                Pack(nQuotientWidth, abs(anQIndex[nBin]) / nMaxIndex - 1); /* the quotient */
+                                HuffEnc(pQIndexBook, bs, abs(anQIndex[nBin]) % nMaxIndex); /* the remainder */
                             }
                         }
                     }
+
+                    /* deal with the sign (+/-) */
+                    /* non-midtread huff codebook, use an additional bit to decode */
+                    for (nBin = nStart; nBin < nEnd; nBin++) {
+                        if (anQIndex[nBin] != 0) {
+                            /* deal with the sign */
+                            if (anQIndex[nBin] > 0) {
+                                Pack(1, 1);
+                            } else {
+                                Pack(1, 0);
+                            }
+                        }
+                    }
+
                 } else {
-                    /* a normal code book */
+
+                    /* a normal code book, use standard way to decode it */
+                    nMaxIndex = GetNumHuffCodes(pQIndexBook) / 2; /* used to resolve sign issues */
                     nDim = GetHuffDim(pQIndexBook);
+
                     if (nDim > 1) {
+                        /* multi-dimentional codebooks */
                         nNumCodes = GetNumHuffCodes(pQIndexBook);
                         for (nBin = nStart; nBin < nEnd; nBin += nDim) {
-                            nQIndex = HuffDec(pQIndexBook);
+                            nQIndex = 0;
                             for (k = 0; k < nDim; k++) {
                                 anQIndex[nBin + k] = nQIndex % nNumCodes;
                                 nQIndex = nQIndex / nNumCodes;
+                                nQIndex += (anQIndex[nBin + k] + nMaxIndex) * pow(nNumCodes, k);
                             }
+                            HuffEnc(pQIndexBook, bs, nQIndex);
                         }
                     } else {
+                        /* one-dimentional codebook */
                         for (nBin = nStart; nBin < nEnd; nBin++) {
-                            anQIndex[nBin] = HuffDec(pQIndexBook);
+                            /* deal with the sign (+/-) */
+                            HuffEnc(pQIndexBook, bs, anQIndex[nBin] + nMaxIndex);
                         }
                     }
-                }
 
-                if (GetHuffMidTread(pQIndexBook) == TRUE) {
-                    /* mid tread huff codebook, subtract the mean value to get the actual value */
-                    nMaxIndex = GetNumHuffCodes(pQIndexBook) / 2;
-                    for (nBin = nStart; nBin < nEnd; nBin++) {
-                        anQIndex[nBin] -= nMaxIndex;
-                    }
-                } else {
-                    /* non-midtread huff codebook, use an additional bit to decode */
-                    for (nBin = nStart; nBin < nEnd; nBin++) {
-                        nQIndex = anQIndex[nBin];
-                        if (nQIndex != 0) {
-                            Pack(1, nSign);
-                            if (nSign == 0) {
-                                nQIndex = -nQIndex;
-                            }
-                        }
-                        anQIndex[nBin] = nQIndex;
-                    }
-                }
+                } // if (nHSelect == 8)
             }
             nStart = nEnd;
         }
@@ -411,7 +424,7 @@ static void Quantilize() {
     }
 }
 
-static INT Ceil(INT x, INT y) {
+static inline INT Ceil(INT x, INT y) {
     // return the min t where t >= x/y
     if (y == 0) {
         handle_error(ERROR_INVALID_ARGV);
@@ -422,6 +435,10 @@ static INT Ceil(INT x, INT y) {
         return x / y;
     }
     return x / y + 1;
+}
+
+static inline INT Max(INT x, INT y) {
+    return x > y ? x : y;
 }
 
 static void PackAuxiliaryData() {
