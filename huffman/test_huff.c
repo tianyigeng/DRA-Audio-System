@@ -84,6 +84,13 @@ int main() {
         HuffEncDiff(&HuffDec27_256x1, bs, 222);
         HuffEncDiff(&HuffDec27_256x1, bs, 150);
         HuffEncDiff(&HuffDec27_256x1, bs, 124);
+        HuffEnc(&HuffDec27_256x1, bs, 204);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 254);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 257);
+        HuffEnc(&HuffDec27_256x1, bs, 204);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 256);
+        HuffEnc(&HuffDec27_256x1, bs, 204);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 255);
 
         bitstream_print(bs);
         
@@ -96,6 +103,13 @@ int main() {
         printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
         printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
         printf("%d\n", HuffDecDiff(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDec(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDec(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDec(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
 
         bitstream_destroy(bs);
     }
