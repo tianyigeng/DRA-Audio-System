@@ -6,6 +6,7 @@
 #define MAX_BOOK    9
 
 struct huff_codebook {
+    uint32_t id;
     uint32_t dim;
     uint32_t num_codes;
     uint32_t size;

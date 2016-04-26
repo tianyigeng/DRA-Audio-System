@@ -151,9 +151,9 @@ test_huff.o: huffman/test_huff.c
 	gcc -c huffman/test_huff.c \
 		-o test_huff.o
 
-testhuff: test_huff.o errors.o vector.o bitstream.o huffcoding.o hufftree.o huffbook.o
+testhuff: test_huff.o errors.o vector.o bitstream.o huffcoding.o hufftree.o huffbook.o bs_iter.o
 	gcc -o testhuff \
-		test_huff.o errors.o vector.o bitstream.o huffcoding.o hufftree.o huffbook.o
+		test_huff.o errors.o vector.o bitstream.o huffcoding.o hufftree.o huffbook.o bs_iter.o
 	-@./testhuff
 	-@make clean
 	-@rm testhuff

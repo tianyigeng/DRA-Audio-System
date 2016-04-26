@@ -8,6 +8,65 @@
 #include <stdlib.h>
 #include "huffcoding.h"
 
+void ResetHuffIndex(struct huff_codebook* book, int val);
+
+int32_t HuffDec(struct huff_codebook* book, struct bs_iter* iter) {
+    /* a tree to help decoding */
+    struct tree_node* root = build_tree(book);
+
+    struct tree_node* curr = root;
+
+    while (1) {
+        /* loop until we decoded a value */
+        if (bs_iter_unpack(iter, 1)) {
+            curr = curr->right;
+        } else {
+            curr = curr->left;
+        }
+
+        if (curr->is_leaf) {
+            int32_t ret = curr->val;
+            erase_tree(root);
+            return ret;
+        }
+    }
+    
+    handle_error(ERROR_UNKNOWN);
+    return -1;
+}
+
+int32_t HuffDecDiff(struct huff_codebook* book, struct bs_iter* iter);
+int32_t HuffDecRecursive(struct huff_codebook* book, struct bs_iter* iter);
+
+void HuffEnc(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
+    uint32_t* temp_code = (uint32_t*) malloc(sizeof(uint32_t) * book->size);
+    uint32_t* temp_bits = (uint32_t*) malloc(sizeof(uint32_t) * book->size);
+    uint32_t cumulate_size = 0;
+
+    if (temp_bits == NULL || temp_code == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return;
+    }
+
+    const uint32_t max_book_indx = book->size - 1;
+
+    /* set up library here */
+    for (uint32_t i = 0; i < book->size; i++) {
+        cumulate_size += book->bit_incr[i];
+        temp_code[book->index[i]] = book->code[i];
+        temp_bits[book->index[i]] = cumulate_size;
+    }
+
+    /* push to bitstream */
+    bitstream_push(bs, temp_code[val], temp_bits[val]);
+
+    free(temp_code);
+    free(temp_bits);
+}
+
+void HuffEncDiff(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
+void HuffEncRecursive(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
+
 /* used for encoding/decoding bit_stream with codebook HuffDec27_256x1 */
 static void _huff_decode_overflow(struct huff_codebook* book, 
                                     struct bit_stream* src, 
