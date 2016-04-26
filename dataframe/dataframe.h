@@ -31,4 +31,12 @@ const INT WIN_SHORT_BRIEF2SHORT = 12;  /* size: 256 samples */
 #define MAX_BAND    32   /* max bands in a cluster */
 #define MAX_STEP    116  /* max step values for unit-step */
 
+/* TODO: Accumulate that!!! */
+/* minimum nBand defined by Psychoacoustics model, 8kHz sample rate, long window */
+INT     pnCBEdge[MAX_BAND] = {26, 27, 27, 28, 30, 32, 34, 37, 41, 46, 53, 62, 74, 89, 109, 133, 162, 14};
+
+DOUBLE  aunStepSize[MAX_STEP];                     /* store step sizes for unit step */
+
+INT     nSyncWord = 0x7FFF;
+
 #endif

@@ -1,50 +1,57 @@
-#ifndef __DECODE_C_
-#define __DECODE_C_
+#ifndef __ENCODE_C_
+#define __ENCODE_C_
 
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include "../bitstream/bitstream.h"
-#include "../bitstream/bs_iter.h"
 #include "../huffman/huffbook.h"
 #include "../huffman/huffcoding.h"
 #include "dataframe.h"
 
 /* Forward decls */
-static void     init(struct bit_stream* bs); /* set up essentials */
-static void     clear();                     /* release memory */
+static void     init(struct bit_stream* bs);  /* set up essentials */
+static void     clear();                      /* release memory */
 
+static void     SetUpConfig();                /* set up configuration variables with the input frame */
 static INT      Ceil(INT x, INT y);
 
-static uint32_t Unpack(uint16_t bits);       /* unpack bits from bit_stream */
+static void     Pack(uint16_t bits, INT val); /* pack bits into bit_stream */
 
-static void     Frame();                     /* decode a frame */
-static void     FrameHeader();               /* decode frame header */
-static void     UnpackWinSequence();
-static void     UnpackCodeBooks();
-static void     UnpackQIndex();
-static void     UnpackQStepIndex();
-static void     UnpackSumDff();
-static void     UnpackJicScale();
-static void     UnpackBitPad();
-static void     AuxiliaryData();
+static void     PackFrame();                  /* encode a PackFrame */
+static void     PackFrameHeader();            /* encode PackFrame header */
+static void     PackWinSequence();
+static void     PackCodeBooks();
+static void     PackQIndex();
+static void     PackQStepIndex();
+static void     PackSumDff();
+static void     PackJicScale();
+static void     PackBitPad();
+static void     PackAuxiliaryData();
+
+static void     ConstructQuantUnit();
+static void     Quantilize();
+
 /* End of forward decls */
 
-/* an iterator of the input bitstream */
-struct bs_iter* iter;
+/* bitstream which we are writing data to */
+struct bit_stream* bs;
+
+DOUBLE  afFreqVals[MAX_INDEX];                   /* store values (after mdct) to be processed */
 
 /* configuration variables */
 INT     nNumNormalCh, nNumLfeCh;
 BOOL    bUseSumDiff, bUseJIC;
-
 INT     nNumBlocksPerFrm;
 INT     nFrmHeaderType;
 INT     nJicCb;
 INT     nNumWord;
+BOOL    bAuxData;
+INT     nSampleRateIndex;
+
 INT     nNumCodes;
 INT     nDim;
-INT     nSampleRateIndex;
 INT     nNumCluster;
-BOOL    bAuxData;
 
 /* temp variables */
 INT     nWinTypeCurrent;
@@ -55,55 +62,92 @@ INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin,
         nBin0, nNumBlocks, nStepSize, nQStepSelect;
 
 /* one-dimentional arrays */
-INT     anNumBlocksPerFrmPerCluster[MAX_CLUSTER];  /* num of blocks/frame in a cluster */
+INT     anNumBlocksPerFrmPerCluster[MAX_CLUSTER];  /* num of blocks/PackFrame in a cluster */
 INT     anHSNumBands[MAX_CLUSTER];                 /* num of bands in a cluster */
 INT     anClusterBin0[MAX_CLUSTER];                /* first index at every cluster */
 INT     anMaxActCb[MAX_CLUSTER];                   /*  */
 
 INT     anQIndex[MAX_INDEX];                       /* indices before inv-unitstep */
 
-DOUBLE  afBinReconst[MAX_INDEX];                   /* store recovered data (before imdct) */
+
 
 /* two-dimentional arrays */
 INT     mnHS[MAX_CLUSTER][MAX_BAND];                /* huffbook index at (nCluster, nBand) */
 INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope at (nCluster, nBand) */
 INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
 
-/* decode the bitstream into pre-imdct according to dra spec */
-void dra_decode(struct bit_stream* bs) {
+/* encode the frequencies into bitstream according to dra spec */
+void dra_encode(struct vector* after_mdct, struct bit_stream* bs) {
     init(bs);
 
-    while (Unpack(16) == nSyncWord) {
-        Frame();
+    for (uint32_t i = 0; i < after_mdct->size; i++) {
+        struct vector* frame_to_enc = (struct vector*) vector_object_at(after_mdct, i);
+        for (uint32_t j = 0; j < MAX_INDEX; j++) {
+            afFreqVals[j] = vector_double_at(frame_to_enc, j);
+        }
+        PackFrame();
     }
 
     clear();
 }
 
-static void Frame() {
-    /* Load frame headers and fill into configuration variables */
-    FrameHeader();
+static void SetUpConfig() {
+    nFrmHeaderType   = 0;   /* standard frame */
+    // nNumWord = ;
+    nNumBlocksPerFrm = 1;   /* 1 blocks/frame (stable frame) */
+    nSampleRateIndex = 0;   /* sample rate @ 8000Hz */
+    nNumNormalCh     = 1;   /* 1 normal channels */
+    nNumLfeCh        = 0;   /* NO LFE channels */
+
+    bAuxData         = 0;       /* DONOT set auxiliary data */
+
+    bUseSumDiff      = FALSE;   /* DONOT use sum-diff coding */
+    bUseJIC          = FALSE;   /* DONOT use joint-density coding */
+    nJicCb           = 0;       /* DONOT use JIC */
+
+    nNumCluster      = 1;       /* ONLY one cluster */
+
+    nWinTypeCurrent  = WIN_LONG_LONG2LONG; /* the window used */
+
+    anHSNumBands[0]    = 1;       /* 1 band */
+    mnHSBandEdge[0][0] = 256;     /* size of band is 256 * 4 = 1024 */
+
+    anNumBlocksPerFrmPerCluster[0] = 1;    /* 1 block/frame in the cluster */
+
+    anClusterBin0[0]   = 0;       /* the first cluster begin at 0 */
+
+    ConstructQuantUnit();
+    Quantilize();
+}
+
+static void PackFrame() {
+
+    /* First, set up configuration variables */
+    SetUpConfig();
+
+    /* Pack Frame Headers */
+    PackFrameHeader();
 
     /* Normal channels */
     for (nCh = 0; nCh < nNumNormalCh; nCh++) {
-        UnpackWinSequence();
-        UnpackCodeBooks();
-        UnpackQIndex();
-        UnpackQStepIndex();
+        PackWinSequence();
+        PackCodeBooks();
+        PackQIndex();
+        PackQStepIndex();
     }
 
     /* sum-diff-coding */
     if (bUseSumDiff == TRUE && (nCh % 2) == 1) {
         assert(0); /* unsupported now */
 
-        UnpackSumDff();
+        PackSumDff();
     }
 
     /* joint-intensity-coding */
     if (bUseJIC == TRUE && nCh > 0) {
         assert(0); /* unsupported now */
 
-        UnpackJicScale();
+        PackJicScale();
     }
 
     /* LFE (low freq enhancement) channels */
@@ -120,52 +164,50 @@ static void Frame() {
             anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
         }
 
-        UnpackCodeBooks();
-        UnpackQIndex();
-        UnpackQStepIndex();
+        PackCodeBooks();
+        PackQIndex();
+        PackQStepIndex();
     }
 
     /* bit pad */
-    UnpackBitPad();
+    PackBitPad();
 
     /* user defined axuiliary data */
-    AuxiliaryData();
+    PackAuxiliaryData();
 }
 
-static void FrameHeader() {
-    /* frame header type */
-    nFrmHeaderType = Unpack(1);
+static void PackFrameHeader() {
+    /* PackFrame header type */
+    Pack(1, nFrmHeaderType);
 
     /* num of words */
     if (nFrmHeaderType == 0) {
-        nNumWord = Unpack(10);
+        Pack(10, nNumWord);
     } else {
-
         assert(0); /* unsupported now */
-
-        nNumWord = Unpack(13);
+        Pack(13, nNumWord);
     }
 
-    /* blocks per frame */
-    nNumBlocksPerFrm = 1 << Unpack(2);
+    /* blocks per PackFrame */
+    Pack(2, log2(nNumBlocksPerFrm));
 
     /* sample rate */
-    nSampleRateIndex = Unpack(4);
+    Pack(4, nSampleRateIndex);
 
     /* num normal channel & lfe channel */
     if (nFrmHeaderType == 0) {
-        nNumNormalCh = Unpack(3) + 1;
-        nNumLfeCh = Unpack(1);
+        Pack(3, nNumNormalCh - 1);
+        Pack(1, nNumLfeCh);
     } else {
 
         assert(0); /* unsupported now */
 
-        nNumNormalCh = Unpack(6) + 1;
-        nNumLfeCh = Unpack(2);
+        Pack(6, nNumNormalCh - 1);
+        Pack(2, nNumLfeCh);
     }
 
     /* aux data */
-    bAuxData = Unpack(1);
+    Pack(1, bAuxData);
 
     /* use sumdiff / use jic */
     if (nFrmHeaderType == 0) {
@@ -173,35 +215,27 @@ static void FrameHeader() {
 
             assert(0); /* unsupported now */
 
-            bUseSumDiff = Unpack(1);
-            bUseJIC = Unpack(1);
-        } else {
-            bUseSumDiff = 0;
-            bUseJIC = 0;
+            Pack(1, bUseSumDiff);
+            Pack(1, bUseJIC);
         }
 
         if (bUseJIC == 1) {
 
             assert(0); /* unsupported now */
 
-            nJicCb = Unpack(5) + 1;
-        } else {
-            nJicCb = 0;
+            Pack(5, nJicCb - 1);
         }
     } else {
         assert(0); /* unsupported now */
-        bUseSumDiff = 0;
-        bUseJIC = 0;
-        nJicCb = 0;
     }
 }
 
-static void UnpackCodeBooks() {
+static void PackCodeBooks() {
     assert(nNumCluster == 1); /* unsupported now */
 
-    /* unpack scope of books */
+    /* pack scope of books */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
-        anHSNumBands[nCluster] = Unpack(5);
+        Pack(5, anHSNumBands[nCluster]);
         nLast = 0;
         for (nBand = 0; nBand < anHSNumBands[nCluster]; nBand++) {
             k = HuffDecRecursive(pRunLengthBook) + nLast + 1; /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
@@ -210,10 +244,10 @@ static void UnpackCodeBooks() {
         }
     }
 
-    /* unpack indices of code book */
+    /* pack indices of code book */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         if (anHSNumBands[nCluster] > 0) {
-            nLast = Unpack(4);
+            Pack(4, nLast);
             mnHS[nCluster][0] = nLast;
             for (nBand = 1; nBand < anHSNumBands[nCluster]; nBand++) {
                 k = HuffDecode(pHSBook); /* pHSBook = HuffDec4_18x1 / HuffDec5_18x1 */
@@ -230,19 +264,21 @@ static void UnpackCodeBooks() {
     }
 }
 
-static void UnpackQStepIndex() {
+static void PackQStepIndex() {
     assert(nNumCluster == 1); /* unsupported now */
 
     /* reset state */
     ResetHuffIndex(pQStepBook, 0);
+
+    /* use HuffEncDiff to put QStep indices into bitstream */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
-            mnQStepIndex[nCluster][nBand] = HuffDecDiff(pQStepBook);
+            HuffEncDiff(pQStepBook, bs, mnQStepIndex[nCluster][nBand]);
         }
     }
 }
 
-static void UnpackQIndex() {
+static void PackQIndex() {
     assert(nNumCluster == 1);
 
     /* reset state */
@@ -279,7 +315,8 @@ static void UnpackQIndex() {
                         for (nBin = nStart; nBin < nEnd; nBin++) {
                             nQIndex = anQIndex[nBin];
                             if (nQIndex == nMaxIndex) {
-                                nQIndex *= Unpack(nQuotientWidth) + 1;
+                                Pack(nQuotientWidth, 0xff);
+                                nQIndex *= 1 + 1;
                                 nQIndex += HuffDec(pQIndexBook);
                                 anQIndex[nBin] = nQIndex;
                             }
@@ -315,7 +352,7 @@ static void UnpackQIndex() {
                     for (nBin = nStart; nBin < nEnd; nBin++) {
                         nQIndex = anQIndex[nBin];
                         if (nQIndex != 0) {
-                            nSign = Unpack(1);
+                            Pack(1, nSign);
                             if (nSign == 0) {
                                 nQIndex = -nQIndex;
                             }
@@ -329,58 +366,26 @@ static void UnpackQIndex() {
     }
 }
 
-static void UnpackWinSequence() {
-    /* record the state for further use */
-    static INT Ch0_nWinTypeCurrent;
-    static INT Ch0_nNumCluster;
-    static INT Ch0_anNumBlocksPerFrmPerCluster[MAX_CLUSTER];
+static void PackWinSequence() {
+    /* we only pack the info for the first channel, all others shall be the same */
 
-    if (nCh == 0 || (bUseJIC == FALSE && bUseSumDiff == FALSE)) {
-        nWinTypeCurrent = Unpack(4);
-        if (nWinTypeCurrent > 8) {
-            /* if current window is a short window */
+    Pack(4, nWinTypeCurrent);
 
-            assert(0); /* unsupported now */
+    if (nWinTypeCurrent > 8) {
+        /* if current window is a short window */
 
-            nNumCluster = Unpack(2) + 1;
-            if (nNumCluster >= 2) {
-                nLast = 0;
-                for (nCluster = 0; nCluster < nNumCluster - 1; nCluster++) {
-                    k = HuffDec(pClusterBook) + 1;
-                    anNumBlocksPerFrmPerCluster[nCluster] = k;
-                    nLast += k;
-                }
-                anNumBlocksPerFrmPerCluster[nCluster] = nNumBlocksPerFrm - nLast;
-            } else {
-                anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
-            }
-        } else {
-            /* if current window is a long window */
-            nNumCluster = 1;
-            anNumBlocksPerFrmPerCluster[0] = 1;
-        }
-
-        if (nCh == 0) {
-            /* copy the state information to static variables for further use */
-            Ch0_nWinTypeCurrent = nWinTypeCurrent;
-            Ch0_nNumCluster = nNumCluster;
-            for (n = 0; n < nNumCluster; n++) {
-                Ch0_anNumBlocksPerFrmPerCluster[n] = anNumBlocksPerFrmPerCluster[n];
-            }
-        }
-    } else {
         assert(0); /* unsupported now */
 
-        /* copy the info of Ch0 */
-        nWinTypeCurrent = Ch0_nWinTypeCurrent;
-        nNumCluster = Ch0_nNumCluster;
-        for (n = 0; n < nNumCluster; n++) {
-            anNumBlocksPerFrmPerCluster[n] = Ch0_anNumBlocksPerFrmPerCluster[n];
+        Pack(2, nNumCluster - 1);
+        if (nNumCluster >= 2) {
+            for (nCluster = 0; nCluster < nNumCluster - 1; nCluster++) {
+                HuffEnc(pClusterBook, bs, anNumBlocksPerFrmPerCluster[nCluster] - 1);
+            }
         }
     }
 }
 
-static void ReconstructQuantUnit() {
+static void ConstructQuantUnit() {
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         nMaxBand = anHSNumBands[nCluster];
         nMaxBin = mnHSBandEdge[nCluster][nMaxBand - 1] * 4;
@@ -393,7 +398,7 @@ static void ReconstructQuantUnit() {
     }
 }
 
-static void InverseQuant() {
+static void Quantilize() {
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         nBin0 = anClusterBin0[nCluster];
         for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
@@ -403,7 +408,7 @@ static void InverseQuant() {
             nQStepSelect = mnQStepIndex[nCluster][nBand];
             nStepSize = aunStepSize[nQStepSelect];
             for (nBin = nStart; nBin < nEnd; nBin++) {
-                afBinReconst[nBin] = anQIndex[nBin] * nStepSize;
+                anQIndex[nBin] = afFreqVals[nBin] / nStepSize;
             }
         }
     }
@@ -422,34 +427,32 @@ static INT Ceil(INT x, INT y) {
     return x / y + 1;
 }
 
-static void AuxiliaryData() {
+static void PackAuxiliaryData() {
     /* Intentionally blank */
 }
 
-static void UnpackSumDff() {
+static void PackSumDff() {
     /* Intentionally blank */
 }
 
-static void UnpackJicScale() {
+static void PackJicScale() {
     /* Intentionally blank */
 }
 
-static void UnpackBitPad() {
+static void PackBitPad() {
     /* Intentionally blank */
 }
 
-static uint32_t Unpack(uint16_t bits) {
-    return bs_iter_unpack(iter, bits);
+static void Pack(uint16_t bits, INT val) {
+    bitstream_push(bs, val, bits);
 }
 
-static void init(struct bit_stream* input_bs) {
-    iter = bs_iter_init(input_bs);
+static void init(struct bit_stream* target_bs) {
+    bs = target_bs;
 }
 
 static void clear() {
-    if (iter != NULL) {
-        bs_iter_destroy(iter);
-    }
+    bs = NULL;
 }
 
 #endif

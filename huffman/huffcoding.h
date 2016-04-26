@@ -1,6 +1,7 @@
 #ifndef __HUFFCODING_H_
 #define __HUFFCODING_H_
 
+#include <stdint.h>
 #include "huffbook.h"
 #include "hufftree.h"
 #include "../bitstream/bitstream.h"
@@ -29,5 +30,8 @@ uint8_t GetHuffMidTread(struct huff_codebook* book);
 int32_t HuffDecRecursive(struct huff_codebook* book);
 
 int32_t HuffDecode(struct huff_codebook* book);
+
+void HuffEnc(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
+void HuffEncDiff(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
 
 #endif

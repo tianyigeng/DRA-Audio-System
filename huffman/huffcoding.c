@@ -5,7 +5,6 @@
 #ifndef __HUFFCODING_C_
 #define __HUFFCODING_C_
 
-#include <stdint.h>
 #include <stdlib.h>
 #include "huffcoding.h"
 
