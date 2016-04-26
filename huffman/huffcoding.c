@@ -30,13 +30,23 @@ int32_t HuffDec(struct huff_codebook* book, struct bs_iter* iter) {
             return ret;
         }
     }
-    
+
     handle_error(ERROR_UNKNOWN);
     return -1;
 }
 
 int32_t HuffDecDiff(struct huff_codebook* book, struct bs_iter* iter);
-int32_t HuffDecRecursive(struct huff_codebook* book, struct bs_iter* iter);
+
+int32_t HuffDecRecursive(struct huff_codebook* book, struct bs_iter* iter) {
+    int32_t k = -1;
+    int32_t nQIndex = 0;
+    int32_t nNumCodes = book->size;
+    do {
+        k++;
+        nQIndex = HuffDec(book, iter);
+    } while (nQIndex == nNumCodes - 1);
+    return k * (nNumCodes - 1) + nQIndex;
+}
 
 void HuffEnc(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
     uint32_t* temp_code = (uint32_t*) malloc(sizeof(uint32_t) * book->size);
@@ -47,8 +57,6 @@ void HuffEnc(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
         handle_error(ERROR_FAILURE_ALLOC_MEM);
         return;
     }
-
-    const uint32_t max_book_indx = book->size - 1;
 
     /* set up library here */
     for (uint32_t i = 0; i < book->size; i++) {
@@ -65,7 +73,15 @@ void HuffEnc(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
 }
 
 void HuffEncDiff(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
-void HuffEncRecursive(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
+
+void HuffEncRecursive(struct huff_codebook* book, struct bit_stream* bs, int32_t val) {
+    int32_t nNumCodes = book->size;
+    while (val >= nNumCodes - 1) {
+        HuffEnc(book, bs, nNumCodes - 1);
+        val -= nNumCodes - 1;
+    }
+    HuffEnc(book, bs, val);
+}
 
 /* used for encoding/decoding bit_stream with codebook HuffDec27_256x1 */
 static void _huff_decode_overflow(struct huff_codebook* book, 

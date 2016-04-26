@@ -52,4 +52,25 @@ int main() {
 
         bitstream_destroy(bs);
     }
+
+    {
+        printf("Test Case 3:\n");
+        struct bit_stream* bs = bitstream_init();
+        HuffEnc(&HuffDec27_256x1, bs, 204);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 254);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 257);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 256);
+        HuffEncRecursive(&HuffDec27_256x1, bs, 255);
+
+        bitstream_print(bs);
+        
+        struct bs_iter* iter = bs_iter_init(bs);
+        printf("%d\n", HuffDec(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
+        printf("%d\n", HuffDecRecursive(&HuffDec27_256x1, iter));
+
+        bitstream_destroy(bs);
+    }
 }
