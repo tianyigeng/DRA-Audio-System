@@ -33,5 +33,6 @@ int32_t HuffDecode(struct huff_codebook* book);
 
 void HuffEnc(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
 void HuffEncDiff(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
+void HuffEncRecursive(struct huff_codebook* book, struct bit_stream* bs, int32_t val);
 
 #endif

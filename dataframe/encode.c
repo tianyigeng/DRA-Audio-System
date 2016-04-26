@@ -73,7 +73,7 @@ INT     anQIndex[MAX_INDEX];                       /* indices before inv-unitste
 
 /* two-dimentional arrays */
 INT     mnHS[MAX_CLUSTER][MAX_BAND];                /* huffbook index at (nCluster, nBand) */
-INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope at (nCluster, nBand) */
+INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope (ending point) at (nCluster, nBand) */
 INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
 
 /* encode the frequencies into bitstream according to dra spec */
@@ -238,34 +238,31 @@ static void PackCodeBooks() {
         Pack(5, anHSNumBands[nCluster]);
         nLast = 0;
         for (nBand = 0; nBand < anHSNumBands[nCluster]; nBand++) {
-            k = HuffDecRecursive(pRunLengthBook) + nLast + 1; /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
-            mnHSBandEdge[nCluster][nBand] = k;
-            nLast = k;
+            /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
+            HuffEncRecursive(pRunLengthBook, bs, mnHSBandEdge[nCluster][nBand] - nLast - 1);
+            nLast = mnHSBandEdge[nCluster][nBand];
         }
     }
 
     /* pack indices of code book */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         if (anHSNumBands[nCluster] > 0) {
-            Pack(4, nLast);
-            mnHS[nCluster][0] = nLast;
+            Pack(4, mnHS[nCluster][0]);
             for (nBand = 1; nBand < anHSNumBands[nCluster]; nBand++) {
-                k = HuffDecode(pHSBook); /* pHSBook = HuffDec4_18x1 / HuffDec5_18x1 */
-                if (k > 8) {
-                    k -= 8;
+                INT nDiff = mnHS[nCluster][nBand] - mnHS[nCluster][nBand - 1];
+                if (nDiff > 0) {
+                    /* pHSBook = HuffDec4_18x1 or HuffDec5_18x1 */
+                    HuffEnc(pHSBook, bs, nDiff + 8);
                 } else {
-                    k -= 9;
+                    HuffEnc(pHSBook, bs, nDiff + 9);
                 }
-                k += nLast;
-                mnHS[nCluster][nBand] = k;
-                nLast = k;
             }
         }
     }
 }
 
 static void PackQStepIndex() {
-    assert(nNumCluster == 1); /* unsupported now */
+    assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
     ResetHuffIndex(pQStepBook, 0);
@@ -279,7 +276,7 @@ static void PackQStepIndex() {
 }
 
 static void PackQIndex() {
-    assert(nNumCluster == 1);
+    assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
     ResetHuffIndex(pQuotientWidthBook, 0);

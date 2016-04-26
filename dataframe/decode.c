@@ -66,7 +66,7 @@ DOUBLE  afBinReconst[MAX_INDEX];                   /* store recovered data (befo
 
 /* two-dimentional arrays */
 INT     mnHS[MAX_CLUSTER][MAX_BAND];                /* huffbook index at (nCluster, nBand) */
-INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope at (nCluster, nBand) */
+INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope (ending point) at (nCluster, nBand) */
 INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
 
 /* decode the bitstream into pre-imdct according to dra spec */
@@ -243,7 +243,7 @@ static void UnpackQStepIndex() {
 }
 
 static void UnpackQIndex() {
-    assert(nNumCluster == 1);
+    assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
     ResetHuffIndex(pQuotientWidthBook, 0);
