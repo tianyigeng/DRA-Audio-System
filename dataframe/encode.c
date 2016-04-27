@@ -10,34 +10,29 @@
 #include "dataframe.h"
 
 /* Forward decls */
-static void     init(struct bit_stream* bs);  /* set up essentials */
-static void     clear();                      /* release memory */
-
 static void     SetUpConfig();                /* set up configuration variables with the input frame */
 
 static inline INT   Ceil(INT x, INT y);
-static inline INT   Max(INT x, INT y);
+static inline INT   Max (INT x, INT y);
 
-static void     Pack(uint16_t bits, INT val); /* pack bits into bit_stream */
+static void     Pack(struct bit_stream* bs, uint16_t bits, INT val); /* pack bits into bit_stream */
 
-static void     PackFrame();                  /* encode a PackFrame */
-static void     PackFrameHeader();            /* encode PackFrame header */
-static void     PackWinSequence();
-static void     PackCodeBooks();
-static void     PackQIndex();
-static void     PackQStepIndex();
-static void     PackSumDff();
-static void     PackJicScale();
-static void     PackBitPad();
-static void     PackAuxiliaryData();
+static void     PackFrame(struct bit_stream* bs);                  /* encode a PackFrame */
+static void     PackFrameHeader(struct bit_stream* bs);            /* encode PackFrame header */
+static void     PackWinSequence(struct bit_stream* bs);
+static void     PackCodeBooks(struct bit_stream* bs);
+static void     PackQIndex(struct bit_stream* bs);
+static void     PackQStepIndex(struct bit_stream* bs);
+static void     PackSumDff(struct bit_stream* bs);
+static void     PackJicScale(struct bit_stream* bs);
+static void     PackBitPad(struct bit_stream* bs, INT nNumWord);
+static void     PackAuxiliaryData(struct bit_stream* bs);
 
 static void     ConstructQuantUnit();
 static void     Quantilize();
+static INT      CalculateHeaderSize();
 
 /* End of forward decls */
-
-/* bitstream which we are writing data to */
-struct bit_stream* bs;
 
 DOUBLE  afFreqVals[MAX_INDEX];                   /* store values (after mdct) to be processed */
 
@@ -54,6 +49,8 @@ INT     nSampleRateIndex;
 INT     nNumCodes;
 INT     nDim;
 INT     nNumCluster;
+
+INT     nHeaderSize;    /* size of frame header, will need this to calculate the frame size (nNumWord) */
 
 /* temp variables */
 struct huff_codebook* pQIndexBook;
@@ -84,25 +81,22 @@ INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, n
 
 /* encode the frequencies into bitstream according to dra spec */
 void dra_encode(struct vector* after_mdct, struct bit_stream* bs) {
-    init(bs);
-
     for (uint32_t i = 0; i < after_mdct->size; i++) {
+        /* process every frame */
         struct vector* frame_to_enc = (struct vector*) vector_object_at(after_mdct, i);
         for (uint32_t j = 0; j < MAX_INDEX; j++) {
             afFreqVals[j] = vector_double_at(frame_to_enc, j);
         }
-        PackFrame();
-        // bitstream_print(bs);
-        printf("exitting..\n");
-        return;
-    }
 
-    clear();
+        PackFrame(bs);
+        printf("frame %d, bs size: %d\n", i, bitstream_size(bs));
+
+        // bitstream_print(bs);
+    }
 }
 
 static void SetUpConfig() {
     nFrmHeaderType   = 0;   /* standard frame */
-    nNumWord         = 200;
     nNumBlocksPerFrm = 1;   /* 1 blocks/frame (stable frame) */
     nSampleRateIndex = 0;   /* sample rate @ 8000Hz */
     nNumNormalCh     = 1;   /* 1 normal channels */
@@ -118,8 +112,8 @@ static void SetUpConfig() {
 
     nWinTypeCurrent  = WIN_LONG_LONG2LONG; /* the window used */
 
-    anHSNumBands[0]    = 1;       /* 1 band */
-    mnHSBandEdge[0][0] = 256;     /* size of band is 256 * 4 = 1024 */
+    anHSNumBands[0]    = 1;       /* 2 bands */
+    mnHSBandEdge[0][0] = 256;       /* size of band is 256 * 4 = 1024 */
     mnHS[0][0]         = 9;       /* temporily use the largest codebook */
 
     anNumBlocksPerFrmPerCluster[0] = 1;    /* 1 block/frame in the cluster */
@@ -127,13 +121,15 @@ static void SetUpConfig() {
     anClusterBin0[0]   = 0;       /* the first cluster begin at 0 */
 
     ConstructQuantUnit();
-    Quantilize();
-
+    
+    /* set up quant indices */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
             mnQStepIndex[nCluster][nBand] = 95;
         }
     }
+
+    Quantilize();
 
     // printf("Indices before quant: \n");
     // for (nBin = 0; nBin < MAX_INDEX; nBin++) {
@@ -145,37 +141,34 @@ static void SetUpConfig() {
     }
 }
 
-static void PackFrame() {
+static void PackFrame(struct bit_stream* bs) {
 
     /* First, set up configuration variables */
     SetUpConfig();
 
-    /* Pack nSyncWord */
-    Pack(16, nSyncWord);
-
-    /* Pack Frame Headers */
-    PackFrameHeader();
+    /* store all except header, in order to calculate nNumWord */
+    struct bit_stream* bsCurrentFrame = bitstream_init();
 
     /* Normal channels */
     for (nCh = 0; nCh < nNumNormalCh; nCh++) {
-        PackWinSequence();
-        PackCodeBooks();
-        PackQIndex();
-        PackQStepIndex();
+        PackWinSequence(bsCurrentFrame);
+        PackCodeBooks(bsCurrentFrame);
+        PackQIndex(bsCurrentFrame);
+        PackQStepIndex(bsCurrentFrame);
     }
 
     /* sum-diff-coding */
     if (bUseSumDiff == TRUE && (nCh % 2) == 1) {
         assert(0); /* unsupported now */
 
-        PackSumDff();
+        PackSumDff(bsCurrentFrame);
     }
 
     /* joint-intensity-coding */
     if (bUseJIC == TRUE && nCh > 0) {
         assert(0); /* unsupported now */
 
-        PackJicScale();
+        PackJicScale(bsCurrentFrame);
     }
 
     /* LFE (low freq enhancement) channels */
@@ -192,50 +185,66 @@ static void PackFrame() {
             anNumBlocksPerFrmPerCluster[0] = nNumBlocksPerFrm;
         }
 
-        PackCodeBooks();
-        PackQIndex();
-        PackQStepIndex();
+        PackCodeBooks(bsCurrentFrame);
+        PackQIndex(bsCurrentFrame);
+        PackQStepIndex(bsCurrentFrame);
     }
 
+    
+    /* after packing other bits, we now know how many bits this frame will have */
+    nHeaderSize = CalculateHeaderSize();
+    nNumWord = Ceil(16 + nHeaderSize + bitstream_size(bsCurrentFrame), 32);
+
+    /* Pack nSyncWord to the target bitstream */
+    Pack(bs, 16, nSyncWord);
+    /* Pack Frame Headers to the target bitstream */
+    PackFrameHeader(bs);
+
+    bitstream_append(bs, bsCurrentFrame);
+
     /* bit pad */
-    PackBitPad();
+    PackBitPad(bs, 32 * nNumWord - 16 - nHeaderSize - bitstream_size(bsCurrentFrame));
 
     /* user defined axuiliary data */
-    PackAuxiliaryData();
+    PackAuxiliaryData(bsCurrentFrame);
+
+    /* release memory */
+    bitstream_destroy(bsCurrentFrame);
 }
 
-static void PackFrameHeader() {
+static INT CalculateHeaderSize() {
+    INT nHeaderSize = 0;
     /* PackFrame header type */
-    Pack(1, nFrmHeaderType);
+    nHeaderSize += 1; // Pack(1, nFrmHeaderType);
 
     /* num of words */
     if (nFrmHeaderType == 0) {
-        Pack(10, nNumWord);
+        nHeaderSize += 10; // Pack(10, nNumWord);
     } else {
         assert(0); /* unsupported now */
-        Pack(13, nNumWord);
+        nHeaderSize += 13; // Pack(13, nNumWord);
     }
 
     /* blocks per PackFrame */
-    Pack(2, log2(nNumBlocksPerFrm));
+    nHeaderSize += 2; // Pack(2, log2(nNumBlocksPerFrm));
 
     /* sample rate */
-    Pack(4, nSampleRateIndex);
+    nHeaderSize += 4; // Pack(4, nSampleRateIndex);
 
     /* num normal channel & lfe channel */
     if (nFrmHeaderType == 0) {
-        Pack(3, nNumNormalCh - 1);
-        Pack(1, nNumLfeCh);
+        nHeaderSize += 3; // Pack(3, nNumNormalCh - 1);
+        nHeaderSize += 1; // Pack(1, nNumLfeCh);
     } else {
 
         assert(0); /* unsupported now */
 
-        Pack(6, nNumNormalCh - 1);
-        Pack(2, nNumLfeCh);
+        nHeaderSize += 6; // Pack(6, nNumNormalCh - 1);
+        nHeaderSize += 2; // Pack(2, nNumLfeCh);
     }
 
     /* aux data */
-    Pack(1, bAuxData);
+    nHeaderSize += 1; // Pack(1, bAuxData);
 
     /* use sumdiff / use jic */
     if (nFrmHeaderType == 0) {
@@ -243,28 +252,84 @@ static void PackFrameHeader() {
 
             assert(0); /* unsupported now */
 
-            Pack(1, bUseSumDiff);
-            Pack(1, bUseJIC);
+            nHeaderSize += 1; // Pack(1, bUseSumDiff);
+            nHeaderSize += 1; // Pack(1, bUseJIC);
         }
 
         if (bUseJIC == 1) {
 
             assert(0); /* unsupported now */
 
-            Pack(5, nJicCb - 1);
+            nHeaderSize += 5; // Pack(5, nJicCb - 1);
+        }
+    } else {
+        assert(0); /* unsupported now */
+    }
+
+    return nHeaderSize;
+}
+
+static void PackFrameHeader(struct bit_stream* bs) {
+    /* PackFrame header type */
+    Pack(bs, 1, nFrmHeaderType);
+
+    /* num of words */
+    if (nFrmHeaderType == 0) {
+        Pack(bs, 10, nNumWord);
+    } else {
+        assert(0); /* unsupported now */
+        Pack(bs, 13, nNumWord);
+    }
+
+    /* blocks per PackFrame */
+    Pack(bs, 2, log2(nNumBlocksPerFrm));
+
+    /* sample rate */
+    Pack(bs, 4, nSampleRateIndex);
+
+    /* num normal channel & lfe channel */
+    if (nFrmHeaderType == 0) {
+        Pack(bs, 3, nNumNormalCh - 1);
+        Pack(bs, 1, nNumLfeCh);
+    } else {
+
+        assert(0); /* unsupported now */
+
+        Pack(bs, 6, nNumNormalCh - 1);
+        Pack(bs, 2, nNumLfeCh);
+    }
+
+    /* aux data */
+    Pack(bs, 1, bAuxData);
+
+    /* use sumdiff / use jic */
+    if (nFrmHeaderType == 0) {
+        if (nNumNormalCh > 1) {
+
+            assert(0); /* unsupported now */
+
+            Pack(bs, 1, bUseSumDiff);
+            Pack(bs, 1, bUseJIC);
+        }
+
+        if (bUseJIC == 1) {
+
+            assert(0); /* unsupported now */
+
+            Pack(bs, 5, nJicCb - 1);
         }
     } else {
         assert(0); /* unsupported now */
     }
 }
 
-static void PackCodeBooks() {
+static void PackCodeBooks(struct bit_stream* bs) {
     printf("packing code books...\n");
     assert(nNumCluster == 1); /* unsupported now */
 
     /* pack scope of books */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
-        Pack(5, anHSNumBands[nCluster]);
+        Pack(bs, 5, anHSNumBands[nCluster]);
         nLast = 0;
         for (nBand = 0; nBand < anHSNumBands[nCluster]; nBand++) {
             /* pRunLengthBook = HuffDec2_64x1 / HuffDec3_32x1 */
@@ -276,7 +341,7 @@ static void PackCodeBooks() {
     /* pack indices of code book */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         if (anHSNumBands[nCluster] > 0) {
-            Pack(4, mnHS[nCluster][0]);
+            Pack(bs, 4, mnHS[nCluster][0]);
             for (nBand = 1; nBand < anHSNumBands[nCluster]; nBand++) {
                 INT nDiff = mnHS[nCluster][nBand] - mnHS[nCluster][nBand - 1];
                 if (nDiff > 0) {
@@ -290,7 +355,7 @@ static void PackCodeBooks() {
     }
 }
 
-static void PackQStepIndex() {
+static void PackQStepIndex(struct bit_stream* bs) {
     printf("packing QStepIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
@@ -305,7 +370,7 @@ static void PackQStepIndex() {
     }
 }
 
-static void PackQIndex() {
+static void PackQIndex(struct bit_stream* bs) {
     printf("packing QIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
@@ -326,11 +391,11 @@ static void PackQIndex() {
             } else {
                 /* decode with selected code book */
                 nHSelect--;
-                printf("selecting book %d\n", nHSelect);
+                // printf("selecting book %d\n", nHSelect);
                 pQIndexBook = QIndexBooks[nHSelect];
 
                 if (nHSelect == 8) {
-                    printf("successfully selected book");
+                    // printf("successfully selected book");
                     /* the largest code book, handle overflow */
                     nMaxIndex = GetNumHuffCodes(pQIndexBook) - 1;
 
@@ -356,7 +421,7 @@ static void PackQIndex() {
                         for (nBin = nStart; nBin < nEnd; nBin++) {
                             if (abs(anQIndex[nBin]) >= nMaxIndex) {
                                 /* overflow happened here */
-                                Pack(nQuotientWidth, abs(anQIndex[nBin]) / nMaxIndex - 1); /* the quotient */
+                                Pack(bs, nQuotientWidth, abs(anQIndex[nBin]) / nMaxIndex - 1); /* the quotient */
                                 HuffEnc(pQIndexBook, bs, abs(anQIndex[nBin]) % nMaxIndex); /* the remainder */
                             }
                         }
@@ -368,9 +433,9 @@ static void PackQIndex() {
                         if (anQIndex[nBin] != 0) {
                             /* deal with the sign */
                             if (anQIndex[nBin] > 0) {
-                                Pack(1, 1);
+                                Pack(bs, 1, 1);
                             } else {
-                                Pack(1, 0);
+                                Pack(bs, 1, 0);
                             }
                         }
                     }
@@ -408,18 +473,18 @@ static void PackQIndex() {
     }
 }
 
-static void PackWinSequence() {
+static void PackWinSequence(struct bit_stream* bs) {
     printf("packing WinSeq...\n");
     /* we only pack the info for the first channel, all others shall be the same */
 
-    Pack(4, nWinTypeCurrent);
+    Pack(bs, 4, nWinTypeCurrent);
 
     if (nWinTypeCurrent > 8) {
         /* if current window is a short window */
 
         assert(0); /* unsupported now */
 
-        Pack(2, nNumCluster - 1);
+        Pack(bs, 2, nNumCluster - 1);
         if (nNumCluster >= 2) {
             for (nCluster = 0; nCluster < nNumCluster - 1; nCluster++) {
                 HuffEnc(pClusterBook, bs, anNumBlocksPerFrmPerCluster[nCluster] - 1);
@@ -451,7 +516,6 @@ static void Quantilize() {
             nQStepSelect = mnQStepIndex[nCluster][nBand];
             nStepSize = aunStepSize[nQStepSelect];
             for (nBin = nStart; nBin < nEnd; nBin++) {
-                printf("%d, %.6f\n", nBin, nStepSize);
                 anQIndex[nBin] = afFreqVals[nBin] / nStepSize;
             }
         }
@@ -475,32 +539,26 @@ static inline INT Max(INT x, INT y) {
     return x > y ? x : y;
 }
 
-static void PackAuxiliaryData() {
+static void PackAuxiliaryData(struct bit_stream* bs) {
     /* Intentionally blank */
 }
 
-static void PackSumDff() {
+static void PackSumDff(struct bit_stream* bs) {
     /* Intentionally blank */
 }
 
-static void PackJicScale() {
+static void PackJicScale(struct bit_stream* bs) {
     /* Intentionally blank */
 }
 
-static void PackBitPad() {
-    /* Intentionally blank */
+static void PackBitPad(struct bit_stream* bs, INT nNumToPad) {
+    printf("n=%d padded\n", nNumToPad);
+    /* pad unused bits with 1 */
+    Pack(bs, nNumToPad, 0xFFFFFFFF);
 }
 
-static void Pack(uint16_t bits, INT val) {
+static void Pack(struct bit_stream* bs, uint16_t bits, INT val) {
     bitstream_push(bs, val, bits);
-}
-
-static void init(struct bit_stream* target_bs) {
-    bs = target_bs;
-}
-
-static void clear() {
-    bs = NULL;
 }
 
 #endif

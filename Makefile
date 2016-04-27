@@ -114,7 +114,7 @@ testall: test_all.o encode.o decode.o bs_iter.o bitstream.o steps.o errors.o vec
 	test_all.o bitstream.o steps.o errors.o vector.o \
 	unitstep.o huffbook.o huffcoding.o hufftree.o \
 	mdct.o fastmdct.o dataframe.o bs_iter.o encode.o decode.o -lfftw3
-	-@./testall
+	-@./testall audio/in.pcm audio/out.pcm
 	-@make clean
 	-@rm testall
 

@@ -51,4 +51,12 @@ static uint32_t bs_iter_unpack_1bit(struct bs_iter* iter) {
     return ret;
 }
 
+uint8_t bs_iter_has_next(struct bs_iter* iter) {
+    return iter->pos < bitstream_size(iter->bs);
+}
+
+uint32_t bs_iter_pos(struct bs_iter* iter) {
+    return iter->pos;
+}
+
 #endif

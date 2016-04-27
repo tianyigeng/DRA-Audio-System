@@ -14,4 +14,8 @@ void bs_iter_destroy(struct bs_iter* iter);
 
 uint32_t bs_iter_unpack(struct bs_iter* iter, uint16_t bits);
 
+uint8_t bs_iter_has_next(struct bs_iter* iter);
+
+uint32_t bs_iter_pos(struct bs_iter* iter);
+
 #endif

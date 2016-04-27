@@ -23,7 +23,7 @@ static void     UnpackQIndex();
 static void     UnpackQStepIndex();
 static void     UnpackSumDff();
 static void     UnpackJicScale();
-static void     UnpackBitPad();
+static void     UnpackBitPad(INT nNumWord);
 static void     AuxiliaryData();
 /* End of forward decls */
 
@@ -46,6 +46,9 @@ BOOL    bAuxData;
 
 /* temp variables */
 struct huff_codebook* pQIndexBook;
+
+INT     nInitPos;    /* mark the initial position of bs_iter when decoding a frame */
+
 INT     nWinTypeCurrent;
 
 INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin, 
@@ -72,10 +75,16 @@ INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, n
 void dra_decode(struct bit_stream* bs) {
     init(bs);
 
-    while (Unpack(16) == nSyncWord) {
-        Frame();
-        for (int i = 0; i < MAX_INDEX; i++) {
-            printf("%d ", anQIndex[i]);
+    while (bs_iter_has_next(iter)) {
+        nInitPos = bs_iter_pos(iter);
+        if (Unpack(16) == nSyncWord) {
+            Frame();
+            for (int i = 0; i < MAX_INDEX; i++) {
+                printf("%d ", anQIndex[i]);
+            }
+        } else {
+            printf("nInitPos = %d, RUNTHEWRONGWAY\n", nInitPos);
+            return;
         }
     }
 
@@ -128,7 +137,7 @@ static void Frame() {
     }
 
     /* bit pad */
-    UnpackBitPad();
+    UnpackBitPad(nNumWord);
 
     /* user defined axuiliary data */
     AuxiliaryData();
@@ -224,6 +233,7 @@ static void UnpackCodeBooks() {
     }
     printf("anHSNumBands[0]: %d\n", anHSNumBands[0]);
     printf("mnHSBandEdge[0][0]: %d\n", mnHSBandEdge[0][0]);
+    printf("mnHSBandEdge[0][1]: %d\n", mnHSBandEdge[0][1]);
 
     /* unpack indices of code book */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
@@ -232,6 +242,7 @@ static void UnpackCodeBooks() {
             mnHS[nCluster][0] = nLast;
             for (nBand = 1; nBand < anHSNumBands[nCluster]; nBand++) {
                 k = HuffDec(pHSBook, iter); /* pHSBook = HuffDec4_18x1 / HuffDec5_18x1 */
+                printf("k=%d\n", k);
                 if (k > 8) {
                     k -= 8;
                 } else {
@@ -239,11 +250,13 @@ static void UnpackCodeBooks() {
                 }
                 k += nLast;
                 mnHS[nCluster][nBand] = k;
+                printf("k=%d\n", k);
                 nLast = k;
             }
         }
     }
     printf("mnHS[0][0]: %d\n", mnHS[0][0]);
+    printf("mnHS[0][1]: %d\n", mnHS[0][1]);
 }
 
 static void UnpackQStepIndex() {
@@ -452,8 +465,8 @@ static void UnpackJicScale() {
     /* Intentionally blank */
 }
 
-static void UnpackBitPad() {
-    /* Intentionally blank */
+static void UnpackBitPad(INT nNumWord) {
+    Unpack(32 * nNumWord - (bs_iter_pos(iter) - nInitPos));
 }
 
 static uint32_t Unpack(uint16_t bits) {

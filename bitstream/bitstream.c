@@ -112,6 +112,13 @@ uint8_t bitstream_bit_at(struct bit_stream* bs, uint32_t i) {
     return _uint32_bit_at(bs->buffer, rem);
 }
 
+void bitstream_append(struct bit_stream* dst, struct bit_stream* src) {
+    uint32_t len = bitstream_size(src);
+    for (uint32_t i = 0; i < len; i++) {
+        bitstream_push_str(dst, bitstream_bit_at(src, i) == 1 ? "1" : "0");
+    }
+}
+
 /*
  *  Find out the i-th bit in the 32-bit form of num
  */

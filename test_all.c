@@ -14,14 +14,31 @@ static inline void message(const char* in) {
 
 int main(int argc, char** argv) {
 
-    const int SIZE = 2048 * 128;
-    
-    struct vector* test_data = vector_init();
-    for (uint32_t i = 0; i < SIZE; i++) {
-        vector_push_back_double(test_data, (rand() % 10000) / 10000.0);
+    if (argc != 3) {
+        printf("INVALID!\n");
+        handle_error(ERROR_INVALID_ARGV);
     }
-    message("Original data:");
-    // vector_print_double(test_data);
+
+    const char* in_file = argv[1];
+    const char* out_file = argv[2];
+    
+    /* read input data */
+    struct vector* test_data = vector_init();
+
+    FILE* fp_in = fopen(in_file, "r");
+    
+    double* buf = (double*) malloc(sizeof(double));
+    if (buf == NULL) {
+        handle_error(ERROR_FAILURE_ALLOC_MEM);
+        return -1;
+    }
+
+    while (fscanf(fp_in, "%lf\n", buf) == 1) {
+        vector_push_back_double(test_data, *buf);
+    }
+
+    free(buf);
+    fclose(fp_in);
 
     printf("mdct begin\n");
     struct vector* mdct = MDCT(test_data);
