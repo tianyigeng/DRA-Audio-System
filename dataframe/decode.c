@@ -77,17 +77,18 @@ INT     mnHSBandEdge[MAX_CLUSTER][MAX_BAND];        /* huffbook scope (ending po
 INT     mnQStepIndex[MAX_CLUSTER][MAX_BAND];        /* quan-step at (nCluster, nBand) */
 
 /* decode the bitstream into pre-imdct according to dra spec */
-void dra_decode(struct bit_stream* bs) {
+void dra_decode(struct bit_stream* bs, struct vector* pre_imdct) {
     init(bs);
 
     while (bs_iter_has_next(iter)) {
         nInitPos = bs_iter_pos(iter);
         if (Unpack(16) == nSyncWord) {
             Frame();
-            for (int i = 0; i < MAX_INDEX; i++) {
-                // printf("%d ", anQIndex[i]);
-                printf("%.2f ", afBinReconst[i]);
+            struct vector* frame_dec = vector_init();
+            for (uint32_t i = 0; i < MAX_INDEX; i++) {
+                vector_push_back_double(frame_dec, afBinReconst[i]);
             }
+            vector_push_back_object(pre_imdct, frame_dec);
         } else {
             printf("nInitPos = %d, RUNTHEWRONGWAY\n", nInitPos);
             return;

@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     fclose(fp_in);
 
     printf("mdct begin\n");
-    struct vector* mdct = MDCT(test_data);
+    struct vector* after_mdct = MDCT(test_data);
     printf("mdct done\n");
     // message("After MDCT:");
     // for (uint32_t i = 0; i < mdct->size; i++) {
@@ -50,8 +50,10 @@ int main(int argc, char** argv) {
     
     struct bit_stream* bs = bitstream_init();
     struct vector* pre_imdct = vector_init();
-    dra_encode(mdct, bs);
-    dra_decode(bs);
+    dra_encode(after_mdct, bs);
+    printf("original size: %d\n", test_data->size);
+    printf("bitstream size: %d\n", bitstream_size(bs));
+    dra_decode(bs, pre_imdct);
     bitstream_destroy(bs);
     // for (uint32_t i = 0; i < mdct->size; i++) {
     //     struct vector* tomdct = (struct vector*) vector_object_at(mdct, i);
@@ -84,18 +86,25 @@ int main(int argc, char** argv) {
     //     vector_print_double((struct vector*) vector_object_at(pre_imdct, i));
     // }
 
-    // message("After iMDCT:");
-    // struct vector* after_imdct = iMDCT(pre_imdct);
+    message("After iMDCT:");
+    struct vector* after_imdct = iMDCT(pre_imdct);
     // vector_print_double(after_imdct);
 
+    /* dump data */
+    FILE* fp_out = fopen(out_file, "w");
+    for (uint32_t i = 0; i < after_imdct->size; i++) {
+        fprintf(fp_out, "%.6f\n", vector_double_at(after_imdct, i));
+    }
+    fclose(fp_out);
+
     // message("Releasing memory...");
-    // vector_destroy(mdct, free_func_2dvec);
+    vector_destroy(after_mdct, free_func_2dvec);
 
-    // vector_destroy(pre_imdct, free_func_2dvec);
-    // vector_destroy(after_imdct, NULL);
-    // vector_destroy(test_data, NULL);
+    vector_destroy(pre_imdct, free_func_2dvec);
+    vector_destroy(after_imdct, NULL);
+    vector_destroy(test_data, NULL);
 
-    // message("Done! Exitting");
+    message("Done! Exitting");
     
     return 0;
 }

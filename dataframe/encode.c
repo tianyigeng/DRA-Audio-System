@@ -93,7 +93,6 @@ void dra_encode(struct vector* after_mdct, struct bit_stream* bs) {
         printf("frame %d, bs size: %d\n", i, bitstream_size(bs));
 
         // bitstream_print(bs);
-        return;
     }
 }
 

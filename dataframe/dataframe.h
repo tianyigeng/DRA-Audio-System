@@ -40,6 +40,6 @@ extern DOUBLE aunStepSize[MAX_STEP];   /* store step sizes for unit step */
 #define nSyncWord 0x7FFF
 
 void dra_encode(struct vector* after_mdct, struct bit_stream* bs);
-void dra_decode(struct bit_stream* bs);
+void dra_decode(struct bit_stream* bs, struct vector* pre_imdct);
 
 #endif
