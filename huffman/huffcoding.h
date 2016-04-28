@@ -8,14 +8,6 @@
 #include "../bitstream/bitstream.h"
 #include "../util/vector.h"
 
-void huff_decode(struct huff_codebook* book, 
-                    struct bit_stream* src, 
-                    struct vector* result);
-
-void huff_encode(struct huff_codebook* book, 
-                    struct vector* src, 
-                    struct bit_stream* result);
-
 void ResetHuffIndex(struct huff_codebook* book, int32_t val);
 
 int32_t HuffDecDiff(struct huff_codebook* book, struct bs_iter* iter);

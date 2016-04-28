@@ -5,7 +5,6 @@
 #include "bitstream/bitstream.h"
 #include "mdct/mdct.h"
 #include "util/vector.h"
-#include "unitstep/unitstep.h"
 #include "dataframe/dataframe.h"
 
 static inline void message(const char* in) {

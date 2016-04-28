@@ -65,14 +65,6 @@ vector.o: util/vector.c util/vector.h
 	gcc -c util/vector.c \
 		-o vector.o
 
-unitstep.o: unitstep/unitstep.h unitstep/unitstep.c
-	gcc -c unitstep/unitstep.c \
-		-o unitstep.o
-
-steps.o: unitstep/unitstep.h unitstep/steps.c
-	gcc -c unitstep/steps.c \
-		-o steps.o
-
 huffbook.o: huffman/huffbook.c huffman/huffbook.h
 	gcc -c huffman/huffbook.c \
 		-o huffbook.o
@@ -109,10 +101,10 @@ test_all.o: test_all.c
 	gcc -c test_all.c \
 		-o test_all.o
 
-testall: test_all.o encode.o decode.o bs_iter.o bitstream.o steps.o errors.o vector.o unitstep.o huffbook.o huffcoding.o hufftree.o mdct.o fastmdct.o dataframe.o
+testall: test_all.o encode.o decode.o bs_iter.o bitstream.o errors.o vector.o huffbook.o huffcoding.o hufftree.o mdct.o fastmdct.o dataframe.o
 	gcc -o testall \
-	test_all.o bitstream.o steps.o errors.o vector.o \
-	unitstep.o huffbook.o huffcoding.o hufftree.o \
+	test_all.o bitstream.o errors.o vector.o \
+	huffbook.o huffcoding.o hufftree.o \
 	mdct.o fastmdct.o dataframe.o bs_iter.o encode.o decode.o -lfftw3
 	-@./testall audio/in.pcm audio/out.pcm
 	-@make clean
