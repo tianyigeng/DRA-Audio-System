@@ -4,7 +4,7 @@ DRA audio encoder &amp; decoder, Mr. Tianyi Geng's undergraduate thesis in Dept.
 https://en.wikipedia.org/wiki/Dynamic_Resolution_Adaptation
 
 ## Author
-Tianyi Geng http://tianyi.world
+Tianyi Geng
 
 ## Advisor
 Prof. Yonglin Xue
