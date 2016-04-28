@@ -30,7 +30,9 @@ Start: Dec. 28, 2015
 
 Proposal: Jan. 19, 2016
 
-Mid-Check: Apr. 15, 2016
+Mid-Check: Apr. 19, 2016
+
+Paper-submit: May 26, 2016
 
 Defense: TBD
 
