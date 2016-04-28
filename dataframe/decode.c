@@ -25,6 +25,9 @@ static void     UnpackSumDff();
 static void     UnpackJicScale();
 static void     UnpackBitPad(INT nNumWord);
 static void     AuxiliaryData();
+
+static void     ReconstructQuantUnit();
+static void     InverseQuant();
 /* End of forward decls */
 
 /* an iterator of the input bitstream */
@@ -54,7 +57,9 @@ INT     nWinTypeCurrent;
 INT     nCluster, nBand, nStart, nEnd, nHSelect, nBin, 
         nMaxIndex, nCtr, nQuotientWidth, nQIndex, nSign, 
         nLast, nCh, k, n, nCb, nMaxBin, nMaxBand, 
-        nBin0, nNumBlocks, nStepSize, nQStepSelect;
+        nBin0, nNumBlocks, nQStepSelect;
+
+DOUBLE  nStepSize;
 
 /* one-dimentional arrays */
 INT     anNumBlocksPerFrmPerCluster[MAX_CLUSTER];  /* num of blocks/frame in a cluster */
@@ -80,7 +85,8 @@ void dra_decode(struct bit_stream* bs) {
         if (Unpack(16) == nSyncWord) {
             Frame();
             for (int i = 0; i < MAX_INDEX; i++) {
-                printf("%d ", anQIndex[i]);
+                // printf("%d ", anQIndex[i]);
+                printf("%.2f ", afBinReconst[i]);
             }
         } else {
             printf("nInitPos = %d, RUNTHEWRONGWAY\n", nInitPos);
@@ -141,10 +147,14 @@ static void Frame() {
 
     /* user defined axuiliary data */
     AuxiliaryData();
+
+    /* do the inverse unit step */
+    ReconstructQuantUnit();
+    InverseQuant();
 }
 
 static void FrameHeader() {
-    printf("unpacking frame header...\n");
+    // printf("unpacking frame header...\n");
     /* frame header type */
     nFrmHeaderType = Unpack(1);
 
@@ -206,19 +216,19 @@ static void FrameHeader() {
         bUseJIC = 0;
         nJicCb = 0;
     }
-    printf("nFrmHeaderType: %d\n", nFrmHeaderType);
-    printf("nNumWord: %d\n", nNumWord);
-    printf("nNumBlocksPerFrm: %d\n", nNumBlocksPerFrm);
-    printf("nSampleRateIndex: %d\n", nSampleRateIndex);
-    printf("nNumNormalCh: %d\n", nNumNormalCh);
-    printf("nNumLfeCh: %d\n", nNumLfeCh);
-    printf("bUseSumDiff: %d\n", bUseSumDiff);
-    printf("bUseJIC: %d\n", bUseJIC);
-    printf("nJicCb: %d\n", nJicCb);
+    // printf("nFrmHeaderType: %d\n", nFrmHeaderType);
+    // printf("nNumWord: %d\n", nNumWord);
+    // printf("nNumBlocksPerFrm: %d\n", nNumBlocksPerFrm);
+    // printf("nSampleRateIndex: %d\n", nSampleRateIndex);
+    // printf("nNumNormalCh: %d\n", nNumNormalCh);
+    // printf("nNumLfeCh: %d\n", nNumLfeCh);
+    // printf("bUseSumDiff: %d\n", bUseSumDiff);
+    // printf("bUseJIC: %d\n", bUseJIC);
+    // printf("nJicCb: %d\n", nJicCb);
 }
 
 static void UnpackCodeBooks() {
-    printf("unpacking codebooks...\n");
+    // printf("unpacking codebooks...\n");
     assert(nNumCluster == 1); /* unsupported now */
 
     /* unpack scope of books */
@@ -231,9 +241,9 @@ static void UnpackCodeBooks() {
             nLast = k;
         }
     }
-    printf("anHSNumBands[0]: %d\n", anHSNumBands[0]);
-    printf("mnHSBandEdge[0][0]: %d\n", mnHSBandEdge[0][0]);
-    printf("mnHSBandEdge[0][1]: %d\n", mnHSBandEdge[0][1]);
+    // printf("anHSNumBands[0]: %d\n", anHSNumBands[0]);
+    // printf("mnHSBandEdge[0][0]: %d\n", mnHSBandEdge[0][0]);
+    // printf("mnHSBandEdge[0][1]: %d\n", mnHSBandEdge[0][1]);
 
     /* unpack indices of code book */
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
@@ -255,12 +265,12 @@ static void UnpackCodeBooks() {
             }
         }
     }
-    printf("mnHS[0][0]: %d\n", mnHS[0][0]);
-    printf("mnHS[0][1]: %d\n", mnHS[0][1]);
+    // printf("mnHS[0][0]: %d\n", mnHS[0][0]);
+    // printf("mnHS[0][1]: %d\n", mnHS[0][1]);
 }
 
 static void UnpackQStepIndex() {
-    printf("unpacking QStepIndex...\n");
+    // printf("unpacking QStepIndex...\n");
     assert(nNumCluster == 1); /* unsupported now */
 
     /* reset state */
@@ -273,7 +283,7 @@ static void UnpackQStepIndex() {
 }
 
 static void UnpackQIndex() {
-    printf("unpacking QIndex...\n");
+    // printf("unpacking QIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
@@ -417,7 +427,7 @@ static void ReconstructQuantUnit() {
         nMaxBin = mnHSBandEdge[nCluster][nMaxBand - 1] * 4;
         nMaxBin = Ceil(nMaxBin, anNumBlocksPerFrmPerCluster[nCluster]);
         nCb = 0;
-        while (pnCBEdge[nCb + 1] < nMaxBin) {
+        while (pnCBEdge[nCb] < nMaxBin) {
             nCb++;
         }
         anMaxActCb[nCluster] = nCb;
@@ -425,6 +435,7 @@ static void ReconstructQuantUnit() {
 }
 
 static void InverseQuant() {
+
     for (nCluster = 0; nCluster < nNumCluster; nCluster++) {
         nBin0 = anClusterBin0[nCluster];
         for (nBand = 0; nBand < anMaxActCb[nCluster]; nBand++) {
@@ -433,6 +444,7 @@ static void InverseQuant() {
             nEnd = nBin0 + nNumBlocks * pnCBEdge[nBand + 1];
             nQStepSelect = mnQStepIndex[nCluster][nBand];
             nStepSize = aunStepSize[nQStepSelect];
+
             for (nBin = nStart; nBin < nEnd; nBin++) {
                 afBinReconst[nBin] = anQIndex[nBin] * nStepSize;
             }

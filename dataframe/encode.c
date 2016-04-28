@@ -84,6 +84,7 @@ void dra_encode(struct vector* after_mdct, struct bit_stream* bs) {
     for (uint32_t i = 0; i < after_mdct->size; i++) {
         /* process every frame */
         struct vector* frame_to_enc = (struct vector*) vector_object_at(after_mdct, i);
+        vector_print_double(frame_to_enc);
         for (uint32_t j = 0; j < MAX_INDEX; j++) {
             afFreqVals[j] = vector_double_at(frame_to_enc, j);
         }
@@ -92,6 +93,7 @@ void dra_encode(struct vector* after_mdct, struct bit_stream* bs) {
         printf("frame %d, bs size: %d\n", i, bitstream_size(bs));
 
         // bitstream_print(bs);
+        return;
     }
 }
 
@@ -130,15 +132,6 @@ static void SetUpConfig() {
     }
 
     Quantilize();
-
-    // printf("Indices before quant: \n");
-    // for (nBin = 0; nBin < MAX_INDEX; nBin++) {
-    //     printf("%.2f ", afFreqVals[nBin]);
-    // }
-    printf("Indices after quant: \n");
-    for (nBin = 0; nBin < MAX_INDEX; nBin++) {
-        printf("%d ", anQIndex[nBin]);
-    }
 }
 
 static void PackFrame(struct bit_stream* bs) {
@@ -324,7 +317,7 @@ static void PackFrameHeader(struct bit_stream* bs) {
 }
 
 static void PackCodeBooks(struct bit_stream* bs) {
-    printf("packing code books...\n");
+    // printf("packing code books...\n");
     assert(nNumCluster == 1); /* unsupported now */
 
     /* pack scope of books */
@@ -356,7 +349,7 @@ static void PackCodeBooks(struct bit_stream* bs) {
 }
 
 static void PackQStepIndex(struct bit_stream* bs) {
-    printf("packing QStepIndex...\n");
+    // printf("packing QStepIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
@@ -371,7 +364,7 @@ static void PackQStepIndex(struct bit_stream* bs) {
 }
 
 static void PackQIndex(struct bit_stream* bs) {
-    printf("packing QIndex...\n");
+    // printf("packing QIndex...\n");
     assert(nNumCluster == 1); /* otherwise unsupported now */
 
     /* reset state */
@@ -474,7 +467,7 @@ static void PackQIndex(struct bit_stream* bs) {
 }
 
 static void PackWinSequence(struct bit_stream* bs) {
-    printf("packing WinSeq...\n");
+    // printf("packing WinSeq...\n");
     /* we only pack the info for the first channel, all others shall be the same */
 
     Pack(bs, 4, nWinTypeCurrent);
@@ -552,7 +545,7 @@ static void PackJicScale(struct bit_stream* bs) {
 }
 
 static void PackBitPad(struct bit_stream* bs, INT nNumToPad) {
-    printf("n=%d padded\n", nNumToPad);
+    // printf("n=%d padded\n", nNumToPad);
     /* pad unused bits with 1 */
     Pack(bs, nNumToPad, 0xFFFFFFFF);
 }
