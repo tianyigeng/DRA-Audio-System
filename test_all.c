@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     dra_encode(after_mdct, bs);
     printf("original size: %d\n", test_data->size);
     printf("bitstream size: %d\n", bitstream_size(bs));
+    printf("compression ratio: %.2f\n", test_data->size * 16.0 / bitstream_size(bs));
     dra_decode(bs, pre_imdct);
     bitstream_destroy(bs);
     // for (uint32_t i = 0; i < mdct->size; i++) {

@@ -253,7 +253,7 @@ static void UnpackCodeBooks() {
             mnHS[nCluster][0] = nLast;
             for (nBand = 1; nBand < anHSNumBands[nCluster]; nBand++) {
                 k = HuffDec(pHSBook, iter); /* pHSBook = HuffDec4_18x1 / HuffDec5_18x1 */
-                printf("k=%d\n", k);
+                // printf("k=%d\n", k);
                 if (k > 8) {
                     k -= 8;
                 } else {
@@ -261,7 +261,7 @@ static void UnpackCodeBooks() {
                 }
                 k += nLast;
                 mnHS[nCluster][nBand] = k;
-                printf("k=%d\n", k);
+                // printf("k=%d\n", k);
                 nLast = k;
             }
         }

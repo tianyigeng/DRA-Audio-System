@@ -28,6 +28,7 @@ static void     PackJicScale(struct bit_stream* bs);
 static void     PackBitPad(struct bit_stream* bs, INT nNumWord);
 static void     PackAuxiliaryData(struct bit_stream* bs);
 
+static void     SetUpHuffBookConfig();
 static void     ConstructQuantUnit();
 static void     Quantilize();
 static INT      CalculateHeaderSize();
@@ -113,14 +114,13 @@ static void SetUpConfig() {
 
     nWinTypeCurrent  = WIN_LONG_LONG2LONG; /* the window used */
 
-    anHSNumBands[0]    = 1;       /* 2 bands */
-    mnHSBandEdge[0][0] = 256;       /* size of band is 256 * 4 = 1024 */
-    mnHS[0][0]         = 9;       /* temporily use the largest codebook */
 
     anNumBlocksPerFrmPerCluster[0] = 1;    /* 1 block/frame in the cluster */
 
     anClusterBin0[0]   = 0;       /* the first cluster begin at 0 */
 
+    anHSNumBands[0]    = 1;       /* note: here are only placeholders for the convient of Construct Quant Unit */
+    mnHSBandEdge[0][0] = 256;
     ConstructQuantUnit();
     
     /* set up quant indices */
@@ -131,6 +131,13 @@ static void SetUpConfig() {
     }
 
     Quantilize();
+
+    /* set up huffman book indices and scopes */
+    SetUpHuffBookConfig();
+    // set up the following variables
+    // anHSNumBands[]
+    // mnHSBandEdge[][]
+    // mnHS[][]
 }
 
 static void PackFrame(struct bit_stream* bs) {
@@ -551,6 +558,55 @@ static void PackBitPad(struct bit_stream* bs, INT nNumToPad) {
 
 static void Pack(struct bit_stream* bs, uint16_t bits, INT val) {
     bitstream_push(bs, val, bits);
+}
+
+static void SetUpHuffBookConfig() {
+
+    for (INT i = 0; i < MAX_INDEX; i++) {
+        printf("%d ", anQIndex[i]);
+    }
+
+    INT nNumBands = 1;
+    INT nEdge;
+    // analyze anQIndex[], give anHSNumBands[], mnHSBandEdge[][] and mnHS[][]
+    for (nBin = MAX_INDEX; nBin > 0; nBin -= 4) {
+        if (abs(anQIndex[nBin - 1]) > 15 ||
+            abs(anQIndex[nBin - 2]) > 15 ||
+            abs(anQIndex[nBin - 3]) > 15 ||
+            abs(anQIndex[nBin - 4]) > 15) {
+            nNumBands = 2;
+            nEdge = nBin / 4;
+            break;
+        }
+    }
+    printf("nEdge = %d\n", nEdge);
+
+    assert(nNumBands == 1 || nNumBands == 2);
+
+    if (nNumBands == 1) {
+        anHSNumBands[0]    = 2;
+        mnHSBandEdge[0][0] = 128;
+        mnHSBandEdge[0][1] = 256;
+        mnHS[0][0]         = 5;
+        mnHS[0][1]         = 0;
+    } else {
+        INT thres = 140;
+        if (nEdge >= thres) {
+            anHSNumBands[0]    = 2;
+            mnHSBandEdge[0][0] = nEdge;
+            mnHSBandEdge[0][1] = 256;
+            mnHS[0][0]         = 9;
+            mnHS[0][1]         = 0;
+        } else {
+            anHSNumBands[0]    = 3;
+            mnHSBandEdge[0][0] = nEdge;
+            mnHSBandEdge[0][1] = thres;
+            mnHSBandEdge[0][2] = 256;
+            mnHS[0][0]         = 9;
+            mnHS[0][1]         = 5;
+            mnHS[0][2]         = 0;
+        }
+    } 
 }
 
 #endif
